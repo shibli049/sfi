@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Parts Alignment Tool</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .controls {
+            width: 300px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 1px solid #ccc;
+            width: 1024px;
+            height: 1024px;
+            /* Target size */
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+
+        .canvas-container img.target {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            object-fit: contain;
+            user-select: none;
+        }
+
+        .canvas-container img.reference {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.5;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .hotspot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: rgba(102, 126, 234, 0.8);
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: grab;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .hotspot:active {
+            cursor: grabbing;
+            background: #4a5bb9;
+        }
+
+        .hotspot.selected {
+            border-color: #fbbf24;
+            background: #4a5bb9;
+            z-index: 100;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.5);
+        }
+
+        .anchor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            z-index: 5;
+            border: 2px solid white;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .control-panel {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 10px;
+        }
+
+        .control-panel h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="controls">
+        <h2>Alignment Tool</h2>
+        <p>1. <b>Blue Dots</b>: Hotspots (Numbers)</p>
+        <p>2. <b>Red Dots</b>: Line Anchors (Body)</p>
+        <p>3. Click a blue dot to select it.</p>
+
+        <div class="control-panel">
+            <h3>Current Selection</h3>
+            <div id="selectionInfo" style="margin-bottom: 10px; color: #666;">None</div>
+            <button id="btnAddAnchor" disabled>Add Anchor Line</button>
+            <button id="btnRemoveAnchor" disabled>Remove Last Anchor</button>
+        </div>
+
+        <label>
+            <input type="checkbox" id="showRef"> Show Reference Image
+        </label>
+        <label>
+            Ref Opacity: <input type="range" id="refOpacity" min="0" max="1" step="0.1" value="0.5">
+        </label>
+
+        <button onclick="guessScale()">Apply Auto-Scale Guess</button>
+        <button onclick="generateJSON()">Generate JSON</button>
+        <textarea id="output" readonly onclick="this.select()"></textarea>
+    </div>
+
+    <div class="canvas-container" id="container">
+        <img src="kroppens-delar-svensk-2.png" class="target" id="targetImg">
+        <img src="kroppens-delar-svensk-numbered.png" class="reference" id="refImg">
+        <svg id="linesSvg"></svg>
+        <div id="overlay"></div>
+    </div>
+
+    <script>
+        // Start Data
+        // Migrated to array structure for 'anchors'
+        let bodyParts = [
+            { num: 1, word: 'ett huvud', x: 95, y: 38, anchors: [{ x: 140, y: 50 }] },
+            { num: 2, word: 'ett öga', x: 95, y: 83, anchors: [{ x: 135, y: 75 }] },
+            { num: 3, word: 'en näsa', x: 220, y: 63, anchors: [{ x: 165, y: 90 }] },
+            { num: 4, word: 'en mun', x: 220, y: 108, anchors: [{ x: 165, y: 110 }] },
+            { num: 5, word: 'en hals', x: 95, y: 138, anchors: [{ x: 150, y: 140 }] },
+            { num: 6, word: 'en axel', x: 390, y: 163, anchors: [{ x: 200, y: 175 }] },
+            { num: 7, word: 'ett bröst', x: 70, y: 223, anchors: [{ x: 130, y: 230 }] },
+            { num: 8, word: 'en mage', x: 40, y: 335, anchors: [{ x: 130, y: 325 }] },
+            { num: 9, word: 'en arm', x: 260, y: 270, anchors: [{ x: 210, y: 280 }] },
+            { num: 10, word: 'en hand', x: 280, y: 380, anchors: [{ x: 220, y: 370 }] },
+            { num: 11, word: 'ett ben', x: 310, y: 470, anchors: [{ x: 155, y: 500 }] },
+            { num: 12, word: 'en fot', x: 310, y: 638, anchors: [{ x: 165, y: 655 }] },
+            { num: 13, word: 'en nacke', x: 465, y: 113, anchors: [{ x: 420, y: 135 }] },
+            { num: 14, word: 'en rygg', x: 485, y: 248, anchors: [{ x: 425, y: 280 }] },
+            { num: 15, word: 'ett knäveck', x: 460, y: 503, anchors: [{ x: 415, y: 510 }] },
+            { num: 16, word: 'en vad', x: 480, y: 593, anchors: [{ x: 415, y: 585 }] },
+            { num: 17, word: 'ett öra', x: 520, y: 63, anchors: [{ x: 560, y: 75 }] },
+            { num: 18, word: 'en armbåge', x: 545, y: 283, anchors: [{ x: 590, y: 275 }] },
+            { num: 19, word: 'en stjärt', x: 545, y: 378, anchors: [{ x: 590, y: 365 }] },
+            { num: 20, word: 'ett finger', x: 685, y: 378, anchors: [{ x: 635, y: 390 }] },
+            { num: 21, word: 'ett lår', x: 665, y: 453, anchors: [{ x: 615, y: 465 }] },
+            { num: 22, word: 'ett knä', x: 665, y: 518, anchors: [{ x: 615, y: 520 }] },
+            { num: 23, word: 'en häl', x: 530, y: 638, anchors: [{ x: 570, y: 650 }] },
+            { num: 24, word: 'en tå', x: 705, y: 638, anchors: [{ x: 650, y: 655 }] }
+        ];
+
+        const overlay = document.getElementById('overlay');
+        const linesSvg = document.getElementById('linesSvg');
+
+        // UI Elements
+        const showRef = document.getElementById('showRef');
+        const refImg = document.getElementById('refImg');
+        const refOpacity = document.getElementById('refOpacity');
+        const btnAddAnchor = document.getElementById('btnAddAnchor');
+        const btnRemoveAnchor = document.getElementById('btnRemoveAnchor');
+        const selectionInfo = document.getElementById('selectionInfo');
+
+        let selectedIndex = -1;
+
+        // --- Event Listeners ---
+
+        showRef.addEventListener('change', (e) => {
+            refImg.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        refOpacity.addEventListener('input', (e) => {
+            refImg.style.opacity = e.target.value;
+        });
+
+        btnAddAnchor.addEventListener('click', () => {
+            if (selectedIndex === -1) return;
+            const part = bodyParts[selectedIndex];
+            // Add a new anchor slighly offset from the hotspot
+            part.anchors.push({ x: part.x + 40, y: part.y + 40 });
+            render();
+            updateSelection();
+        });
+
+        btnRemoveAnchor.addEventListener('click', () => {
+            if (selectedIndex === -1) return;
+            const part = bodyParts[selectedIndex];
+            if (part.anchors.length > 0) {
+                part.anchors.pop();
+                render();
+                updateSelection();
+            }
+        });
+
+        // --- Core Logic ---
+
+        function render() {
+            overlay.innerHTML = '';
+            linesSvg.innerHTML = '';
+
+            bodyParts.forEach((part, index) => {
+                const isSelected = index === selectedIndex;
+
+                // Draw Lines & Anchors
+                part.anchors.forEach(anchor => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', anchor.x);
+                    line.setAttribute('y1', anchor.y);
+                    line.setAttribute('x2', part.x);
+                    line.setAttribute('y2', part.y);
+                    line.setAttribute('stroke', isSelected ? '#667eea' : '#000');
+                    line.setAttribute('stroke-width', isSelected ? '3' : '2');
+                    linesSvg.appendChild(line);
+
+                    const anchorEl = document.createElement('div');
+                    anchorEl.className = 'anchor';
+                    anchorEl.style.left = anchor.x + 'px';
+                    anchorEl.style.top = anchor.y + 'px';
+                    if (isSelected) anchorEl.style.background = '#fbbf24';
+
+                    makeDraggable(anchorEl, anchor, 'x', 'y');
+                    overlay.appendChild(anchorEl);
+                });
+
+                // Draw Hotspot
+                const hotspot = document.createElement('div');
+                hotspot.className = `hotspot ${isSelected ? 'selected' : ''}`;
+                hotspot.textContent = part.num;
+                hotspot.style.left = part.x + 'px';
+                hotspot.style.top = part.y + 'px';
+                hotspot.title = part.word;
+
+                hotspot.addEventListener('mousedown', (e) => {
+                    if (e.target === hotspot) { // Avoid triggering when dragging child? No child here.
+                        selectedIndex = index;
+                        updateSelection();
+                        render(); // Re-render to show selection state
+                    }
+                });
+
+                makeDraggable(hotspot, part, 'x', 'y');
+                overlay.appendChild(hotspot);
+            });
+        }
+
+        function updateSelection() {
+            if (selectedIndex === -1) {
+                selectionInfo.textContent = "None";
+                btnAddAnchor.disabled = true;
+                btnRemoveAnchor.disabled = true;
+                return;
+            }
+
+            const part = bodyParts[selectedIndex];
+            selectionInfo.innerHTML = `<strong>#${part.num} ${part.word}</strong><br>Anchors: ${part.anchors.length}`;
+            btnAddAnchor.disabled = false;
+            btnRemoveAnchor.disabled = part.anchors.length === 0;
+        }
+
+        function makeDraggable(el, dataObj, xProp, yProp) {
+            el.addEventListener('mousedown', (e) => {
+                // If it's a hotspot, we already handled selection in the specific listener, 
+                // but we need to stop propagation if we don't want to deselect or something.
+                // Actually, let's just handle dragging here.
+
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startObjX = dataObj[xProp];
+                const startObjY = dataObj[yProp];
+
+                function onMouseMove(e) {
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+
+                    dataObj[xProp] = Math.round(startObjX + dx);
+                    dataObj[yProp] = Math.round(startObjY + dy);
+
+                    el.style.left = dataObj[xProp] + 'px';
+                    el.style.top = dataObj[yProp] + 'px';
+
+                    // Perf: requestAnimationFrame would be better, but direct render is fine for this scale
+                    render();
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        function guessScale() {
+            const scaleX = 1024 / 683;
+
+            bodyParts.forEach(part => {
+                part.x = Math.round(part.x * scaleX);
+                part.y = Math.round(part.y * scaleX);
+                part.anchors.forEach(anch => {
+                    anch.x = Math.round(anch.x * scaleX);
+                    anch.y = Math.round(anch.y * scaleX);
+                });
+            });
+            render();
+        }
+
+        function generateJSON() {
+            const json = JSON.stringify(bodyParts, null, 4);
+            const output = document.getElementById('output');
+            output.value = json;
+            output.select();
+        }
+
+        // Init
+        render();
+
+    </script>
+</body>
+
+</html>

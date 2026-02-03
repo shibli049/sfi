@@ -34,7 +34,7 @@
         h1 {
             text-align: center;
             color: #667eea;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 2em;
         }
 
@@ -71,12 +71,12 @@
 
         .connection-line {
             stroke: #2d3748;
-            /* Darker color for better visibility */
             stroke-width: 2;
             fill: none;
             opacity: 0.7;
             vector-effect: non-scaling-stroke;
             /* Keep line width constant during scale? Optional */
+            transition: opacity 0.3s ease;
         }
 
         .hotspot:hover~#linesSvg .connection-line[data-num],
@@ -84,6 +84,19 @@
             stroke: #667eea;
             stroke-width: 3;
             opacity: 1;
+        }
+
+        /* Specific Highlight colors for En/Ett if active */
+        .hotspot.en:hover~#linesSvg .connection-line[data-num],
+        .word-item.en:hover~.image-wrapper #linesSvg .connection-line {
+            stroke: #4fd1c5;
+            /* Teal for En */
+        }
+
+        .hotspot.ett:hover~#linesSvg .connection-line[data-num],
+        .word-item.ett:hover~.image-wrapper #linesSvg .connection-line {
+            stroke: #f687b3;
+            /* Pink for Ett */
         }
 
         .hotspot {
@@ -109,6 +122,17 @@
             z-index: 10;
         }
 
+        /* En/Ett visual distinction for Hotspots */
+        .hotspot.en {
+            border-color: #4fd1c5;
+            color: #319795;
+        }
+
+        .hotspot.ett {
+            border-color: #f687b3;
+            color: #d53f8c;
+        }
+
         /* Adjust font/border for smaller screens? */
         @media (max-width: 600px) {
             .hotspot {
@@ -126,6 +150,16 @@
             /* Include translate in hover transform */
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.6);
             z-index: 100;
+        }
+
+        .hotspot.en:hover {
+            background: #4fd1c5;
+            box-shadow: 0 5px 15px rgba(79, 209, 197, 0.6);
+        }
+
+        .hotspot.ett:hover {
+            background: #f687b3;
+            box-shadow: 0 5px 15px rgba(246, 135, 179, 0.6);
         }
 
         .hotspot .label {
@@ -162,9 +196,49 @@
             opacity: 1;
         }
 
+        .filter-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #f7fafc;
+            transform: translateY(-1px);
+        }
+
+        .filter-btn.active {
+            color: white;
+            border-color: transparent;
+        }
+
+        .filter-btn[data-filter="all"].active {
+            background: #667eea;
+        }
+
+        .filter-btn[data-filter="en"].active {
+            background: #4fd1c5;
+        }
+
+        .filter-btn[data-filter="ett"].active {
+            background: #f687b3;
+        }
+
         .instructions {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 20px;
             color: #666;
             font-size: 16px;
             font-style: italic;
@@ -188,18 +262,46 @@
             border: 2px solid transparent;
         }
 
+        /* Specific Styles for En/Ett Words */
+        .word-item.en {
+            border-left: 4px solid #4fd1c5;
+        }
+
+        .word-item.ett {
+            border-left: 4px solid #f687b3;
+            /* Highlight "Ett" words */
+            background: #fff5f7;
+            /* Subtle pink tint */
+        }
+
         .word-item:hover {
             background: #667eea;
             color: white;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            border-left-color: transparent;
+        }
+
+        .word-item.en:hover {
+            background: #4fd1c5;
+        }
+
+        .word-item.ett:hover {
+            background: #f687b3;
         }
 
         .word-item.highlight {
-            background: #667eea;
             color: white;
-            border-color: #764ba2;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+            border-left-color: transparent;
+        }
+
+        .word-item.en.highlight {
+            background: #4fd1c5;
+        }
+
+        .word-item.ett.highlight {
+            background: #f687b3;
         }
 
         .word-number {
@@ -216,10 +318,19 @@
             font-size: 12px;
         }
 
+        .word-item.en .word-number {
+            color: #319795;
+        }
+
+        .word-item.ett .word-number {
+            color: #d53f8c;
+        }
+
         .word-item:hover .word-number,
         .word-item.highlight .word-number {
-            background: #764ba2;
-            color: white;
+            background: white;
+            color: inherit;
+            opacity: 0.9;
         }
 
         .word-text {
@@ -228,12 +339,32 @@
         }
 
         .hotspot.highlight {
-            background: #fbbf24 !important;
-            color: white !important;
             transform: translate(-50%, -50%) scale(1.5) !important;
-            border-color: #f59e0b !important;
-            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.6) !important;
             z-index: 200 !important;
+        }
+
+        .hotspot.en.highlight {
+            background: #4fd1c5 !important;
+            color: white !important;
+            border-color: #38b2ac !important;
+            box-shadow: 0 8px 20px rgba(79, 209, 197, 0.6) !important;
+        }
+
+        .hotspot.ett.highlight {
+            background: #f687b3 !important;
+            color: white !important;
+            border-color: #b83280 !important;
+            box-shadow: 0 8px 20px rgba(246, 135, 179, 0.6) !important;
+        }
+
+        /* Hide logic */
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-out {
+            opacity: 0.1;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -241,6 +372,13 @@
 <body>
     <div class="container">
         <h1>Kroppens Delar</h1>
+
+        <div class="filter-controls">
+            <button class="filter-btn active" data-filter="all">Alla (All)</button>
+            <button class="filter-btn" data-filter="en">En-ord</button>
+            <button class="filter-btn" data-filter="ett">Ett-ord</button>
+        </div>
+
         <div class="image-wrapper">
             <img src="kroppens-delar-svensk-2.png" alt="Kroppens delar" id="bodyImage">
             <!-- viewBox set to 1024 1024 for coordinate space -->
@@ -256,41 +394,99 @@
     <script src="body_parts_data.js"></script>
 
     <script>
-        const img = document.getElementById('bodyImage');
         const hotspotsContainer = document.getElementById('hotspots');
         const wordListContainer = document.getElementById('wordList');
         const linesSvg = document.getElementById('linesSvg');
+        const filterBtns = document.querySelectorAll('.filter-btn');
 
         // Ensure data is loaded
         let bodyParts = typeof bodyPartsData !== 'undefined' ? bodyPartsData : [];
+        let currentFilter = 'all';
 
-        function render() {
+        // Initialize
+        function init() {
             if (bodyParts.length === 0) {
                 console.error("No body parts data found. Check body_parts_data.js");
                 return;
             }
+
+            // Allow user to set filter
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update active state
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    // Apply filter
+                    currentFilter = btn.dataset.filter;
+                    applyFilter();
+                });
+            });
+
+            render();
+        }
+
+        function getCategory(word) {
+            // Simple check: does it start with "ett" or "en"?
+            const lower = word.toLowerCase();
+            if (lower.startsWith('ett ')) return 'ett';
+            if (lower.startsWith('en ')) return 'en';
+            return 'other';
+        }
+
+        function render() {
             createLines();
             createHotspots();
             createWordList();
+        }
+
+        function applyFilter() {
+            // Filter Hotspots
+            document.querySelectorAll('.hotspot').forEach(el => {
+                const category = el.dataset.category;
+                if (currentFilter === 'all' || category === currentFilter) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Filter Words
+            document.querySelectorAll('.word-item').forEach(el => {
+                const category = el.dataset.category;
+                if (currentFilter === 'all' || category === currentFilter) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // Filter Lines
+            document.querySelectorAll('.connection-line').forEach(el => {
+                const category = el.dataset.category;
+                if (currentFilter === 'all' || category === currentFilter) {
+                    el.style.opacity = '0.7'; // Restore visibility
+                } else {
+                    el.style.opacity = '0'; // Hide
+                }
+            });
         }
 
         function createLines() {
             linesSvg.innerHTML = '';
 
             bodyParts.forEach(part => {
-                // Check if part has anchors array (new format) or single point (old format fallback)
+                const category = getCategory(part.word);
                 const anchors = part.anchors || [{ x: part.bodyX, y: part.bodyY }];
 
                 anchors.forEach(anchor => {
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('class', 'connection-line');
                     line.setAttribute('data-num', part.num);
-                    // Directly use coordinates because SVG has viewBox="0 0 1024 1024"
+                    line.setAttribute('data-category', category); // Store category
+
                     line.setAttribute('x1', anchor.x);
                     line.setAttribute('y1', anchor.y);
-                    // part.x/y is the hotspot center
-                    // Note: Hotspots are centered via CSS transform: translate(-50%, -50%)
-                    // The line should point to the center coordinate (part.x, part.y)
                     line.setAttribute('x2', part.x);
                     line.setAttribute('y2', part.y);
                     linesSvg.appendChild(line);
@@ -302,15 +498,16 @@
             hotspotsContainer.innerHTML = '';
 
             bodyParts.forEach(part => {
+                const category = getCategory(part.word);
                 const hotspot = document.createElement('div');
-                hotspot.className = 'hotspot';
+                hotspot.className = `hotspot ${category}`; // Add category class
                 hotspot.textContent = part.num;
 
-                // Use Percentage positioning based on 1024x1024 space
                 hotspot.style.left = (part.x / 1024 * 100) + '%';
                 hotspot.style.top = (part.y / 1024 * 100) + '%';
 
                 hotspot.dataset.num = part.num;
+                hotspot.dataset.category = category;
 
                 const label = document.createElement('div');
                 label.className = 'label';
@@ -318,7 +515,6 @@
 
                 hotspot.appendChild(label);
 
-                // Add hover event to highlight corresponding word and line
                 hotspot.addEventListener('mouseenter', () => highlight(part.num, true));
                 hotspot.addEventListener('mouseleave', () => highlight(part.num, false));
 
@@ -330,9 +526,11 @@
             wordListContainer.innerHTML = '';
 
             bodyParts.forEach(part => {
+                const category = getCategory(part.word);
                 const wordItem = document.createElement('div');
-                wordItem.className = 'word-item';
+                wordItem.className = `word-item ${category}`; // Add category class
                 wordItem.dataset.num = part.num;
+                wordItem.dataset.category = category;
 
                 const wordNumber = document.createElement('div');
                 wordNumber.className = 'word-number';
@@ -345,7 +543,6 @@
                 wordItem.appendChild(wordNumber);
                 wordItem.appendChild(wordText);
 
-                // Add hover event to highlight corresponding hotspot and line
                 wordItem.addEventListener('mouseenter', () => highlight(part.num, true));
                 wordItem.addEventListener('mouseleave', () => highlight(part.num, false));
 
@@ -362,7 +559,22 @@
                 if (wordItem) wordItem.classList.add('highlight');
                 if (hotspot) hotspot.classList.add('highlight');
                 lines.forEach(line => {
-                    line.style.stroke = '#667eea';
+                    // line.classList.add('highlight') // CSS handles stroke? 
+                    // Manual override or class based
+                    // Let's use specific colors based on category if we want, or generic
+                    // The CSS has specific rules for .hotspot.en:hover ~ ...
+                    // But we access via JS events often triggering from "wordItem" which might not be sibling to SVG
+
+                    // So we manually set styles or add class to wrapping container?
+                    // Let's just set styles for simplicity and robustness
+
+                    // Check category
+                    const box = wordItem || hotspot;
+                    const isEtt = box && box.classList.contains('ett');
+
+                    line.style.stroke = isEtt ? '#f687b3' : '#4fd1c5'; // Pink or Teal/Standard
+                    if (!isEtt && !box.classList.contains('en')) line.style.stroke = '#667eea'; // Default
+
                     line.style.strokeWidth = '3';
                     line.style.opacity = '1';
                 });
@@ -370,15 +582,15 @@
                 if (wordItem) wordItem.classList.remove('highlight');
                 if (hotspot) hotspot.classList.remove('highlight');
                 lines.forEach(line => {
-                    line.style.stroke = '#94a3b8';
-                    line.style.strokeWidth = '2';
-                    line.style.opacity = '0.6';
+                    // Reset to default
+                    line.style.stroke = ''; // Remove inline style to revert to CSS
+                    line.style.strokeWidth = '';
+                    line.style.opacity = '0.7';
                 });
             }
         }
 
-        // Init
-        render();
+        init();
 
     </script>
 </body>

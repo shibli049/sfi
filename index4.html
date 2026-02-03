@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kroppens Delar - Interactive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1024px;
+            margin: 0 auto;
+        }
+        
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 10px;
+        }
+        
+        #linesSvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .connection-line {
+            stroke: #94a3b8;
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.6;
+        }
+        
+        .hotspot:hover ~ #linesSvg .connection-line[data-num],
+        .word-item:hover ~ .image-wrapper #linesSvg .connection-line {
+            stroke: #667eea;
+            stroke-width: 3;
+            opacity: 1;
+        }
+        
+        .hotspot {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            margin-left: -17.5px;
+            margin-top: -17.5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 14px;
+            z-index: 1;
+        }
+        
+        .hotspot:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.3);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.6);
+            z-index: 100;
+        }
+        
+        .hotspot .label {
+            position: absolute;
+            bottom: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d3748;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .hotspot .label::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #2d3748;
+        }
+        
+        .hotspot:hover .label {
+            opacity: 1;
+        }
+        
+        .instructions {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 16px;
+            font-style: italic;
+        }
+        
+        .word-list {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .word-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .word-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .word-item.highlight {
+            background: #667eea;
+            color: white;
+            border-color: #764ba2;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+        
+        .word-number {
+            font-weight: bold;
+            margin-right: 12px;
+            min-width: 30px;
+            height: 30px;
+            background: white;
+            color: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .word-item:hover .word-number,
+        .word-item.highlight .word-number {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .word-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .hotspot.highlight {
+            background: #fbbf24 !important;
+            color: white !important;
+            transform: scale(1.5) !important;
+            border-color: #f59e0b !important;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.6) !important;
+            z-index: 200 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kroppens Delar</h1>
+        <div class="image-wrapper">
+            <img src="kroppens-delar-svensk-2.png" alt="Kroppens delar" id="bodyImage">
+            <svg id="linesSvg"></svg>
+            <div id="hotspots"></div>
+        </div>
+        <p class="instructions">Håll muspekaren över numren eller orden!<br>(Hover over the numbers or words!)</p>
+        
+        <div class="word-list" id="wordList"></div>
+    </div>
+    
+    <script>
+        const bodyParts = [
+            // Front view - left figure
+            { num: 1, word: 'ett huvud', x: 95, y: 38, bodyX: 140, bodyY: 50 },
+            { num: 2, word: 'ett öga', x: 95, y: 83, bodyX: 135, bodyY: 75 },
+            { num: 3, word: 'en näsa', x: 220, y: 63, bodyX: 165, bodyY: 90 },
+            { num: 4, word: 'en mun', x: 220, y: 108, bodyX: 165, bodyY: 110 },
+            { num: 5, word: 'en hals', x: 95, y: 138, bodyX: 150, bodyY: 140 },
+            { num: 6, word: 'en axel', x: 390, y: 163, bodyX: 200, bodyY: 175 },
+            { num: 7, word: 'ett bröst', x: 70, y: 223, bodyX: 130, bodyY: 230 },
+            { num: 8, word: 'en mage', x: 40, y: 335, bodyX: 130, bodyY: 325 },
+            { num: 9, word: 'en arm', x: 260, y: 270, bodyX: 210, bodyY: 280 },
+            { num: 10, word: 'en hand', x: 280, y: 380, bodyX: 220, bodyY: 370 },
+            { num: 11, word: 'ett ben', x: 310, y: 470, bodyX: 155, bodyY: 500 },
+            { num: 12, word: 'en fot', x: 310, y: 638, bodyX: 165, bodyY: 655 },
+            
+            // Back view - middle figure
+            { num: 13, word: 'en nacke', x: 465, y: 113, bodyX: 420, bodyY: 135 },
+            { num: 14, word: 'en rygg', x: 485, y: 248, bodyX: 425, bodyY: 280 },
+            { num: 15, word: 'ett knäveck', x: 460, y: 503, bodyX: 415, bodyY: 510 },
+            { num: 16, word: 'en vad', x: 480, y: 593, bodyX: 415, bodyY: 585 },
+            
+            // Side view - right figure
+            { num: 17, word: 'ett öra', x: 520, y: 63, bodyX: 560, bodyY: 75 },
+            { num: 18, word: 'en armbåge', x: 545, y: 283, bodyX: 590, bodyY: 275 },
+            { num: 19, word: 'en stjärt', x: 545, y: 378, bodyX: 590, bodyY: 365 },
+            { num: 20, word: 'ett finger', x: 685, y: 378, bodyX: 635, bodyY: 390 },
+            { num: 21, word: 'ett lår', x: 665, y: 453, bodyX: 615, bodyY: 465 },
+            { num: 22, word: 'ett knä', x: 665, y: 518, bodyX: 615, bodyY: 520 },
+            { num: 23, word: 'en häl', x: 530, y: 638, bodyX: 570, bodyY: 650 },
+            { num: 24, word: 'en tå', x: 705, y: 638, bodyX: 650, bodyY: 655 }
+        ];
+        
+        const img = document.getElementById('bodyImage');
+        const hotspotsContainer = document.getElementById('hotspots');
+        const wordListContainer = document.getElementById('wordList');
+        const linesSvg = document.getElementById('linesSvg');
+        
+        function createLines() {
+            linesSvg.innerHTML = '';
+            
+            const imgWidth = img.offsetWidth;
+            const imgHeight = img.offsetHeight;
+            const scaleX = imgWidth / 1024;
+            const scaleY = imgHeight / 1024;
+            
+            // Set SVG dimensions
+            linesSvg.setAttribute('width', imgWidth);
+            linesSvg.setAttribute('height', imgHeight);
+            
+            bodyParts.forEach(part => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('class', 'connection-line');
+                line.setAttribute('data-num', part.num);
+                line.setAttribute('x1', part.bodyX * scaleX);
+                line.setAttribute('y1', part.bodyY * scaleY);
+                line.setAttribute('x2', part.x * scaleX);
+                line.setAttribute('y2', part.y * scaleY);
+                linesSvg.appendChild(line);
+            });
+        }
+        
+        function createHotspots() {
+            hotspotsContainer.innerHTML = '';
+            
+            const imgWidth = img.offsetWidth;
+            const imgHeight = img.offsetHeight;
+            const scaleX = imgWidth / 1024;
+            const scaleY = imgHeight / 1024;
+            
+            bodyParts.forEach(part => {
+                const hotspot = document.createElement('div');
+                hotspot.className = 'hotspot';
+                hotspot.textContent = part.num;
+                hotspot.style.left = (part.x * scaleX) + 'px';
+                hotspot.style.top = (part.y * scaleY) + 'px';
+                hotspot.dataset.num = part.num;
+                
+                const label = document.createElement('div');
+                label.className = 'label';
+                label.textContent = part.word;
+                
+                hotspot.appendChild(label);
+                
+                // Add hover event to highlight corresponding word and line
+                hotspot.addEventListener('mouseenter', () => {
+                    const wordItem = document.querySelector(`.word-item[data-num="${part.num}"]`);
+                    const line = document.querySelector(`.connection-line[data-num="${part.num}"]`);
+                    if (wordItem) wordItem.classList.add('highlight');
+                    if (line) {
+                        line.style.stroke = '#667eea';
+                        line.style.strokeWidth = '3';
+                        line.style.opacity = '1';
+                    }
+                });
+                
+                hotspot.addEventListener('mouseleave', () => {
+                    const wordItem = document.querySelector(`.word-item[data-num="${part.num}"]`);
+                    const line = document.querySelector(`.connection-line[data-num="${part.num}"]`);
+                    if (wordItem) wordItem.classList.remove('highlight');
+                    if (line) {
+                        line.style.stroke = '#94a3b8';
+                        line.style.strokeWidth = '2';
+                        line.style.opacity = '0.6';
+                    }
+                });
+                
+                hotspotsContainer.appendChild(hotspot);
+            });
+        }
+        
+        function createWordList() {
+            wordListContainer.innerHTML = '';
+            
+            bodyParts.forEach(part => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.dataset.num = part.num;
+                
+                const wordNumber = document.createElement('div');
+                wordNumber.className = 'word-number';
+                wordNumber.textContent = part.num;
+                
+                const wordText = document.createElement('div');
+                wordText.className = 'word-text';
+                wordText.textContent = part.word;
+                
+                wordItem.appendChild(wordNumber);
+                wordItem.appendChild(wordText);
+                
+                // Add hover event to highlight corresponding hotspot and line
+                wordItem.addEventListener('mouseenter', () => {
+                    const hotspot = document.querySelector(`.hotspot[data-num="${part.num}"]`);
+                    const line = document.querySelector(`.connection-line[data-num="${part.num}"]`);
+                    if (hotspot) hotspot.classList.add('highlight');
+                    if (line) {
+                        line.style.stroke = '#667eea';
+                        line.style.strokeWidth = '3';
+                        line.style.opacity = '1';
+                    }
+                });
+                
+                wordItem.addEventListener('mouseleave', () => {
+                    const hotspot = document.querySelector(`.hotspot[data-num="${part.num}"]`);
+                    const line = document.querySelector(`.connection-line[data-num="${part.num}"]`);
+                    if (hotspot) hotspot.classList.remove('highlight');
+                    if (line) {
+                        line.style.stroke = '#94a3b8';
+                        line.style.strokeWidth = '2';
+                        line.style.opacity = '0.6';
+                    }
+                });
+                
+                wordListContainer.appendChild(wordItem);
+            });
+        }
+        
+        img.addEventListener('load', () => {
+            createLines();
+            createHotspots();
+            createWordList();
+        });
+        
+        window.addEventListener('resize', () => {
+            createLines();
+            createHotspots();
+        });
+        
+        if (img.complete) {
+            createLines();
+            createHotspots();
+            createWordList();
+        }
+    </script>
+</body>
+</html>

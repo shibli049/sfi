@@ -69,7 +69,7 @@
             background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
             background-size: 20px 20px;
 
-            padding: 40px;
+            padding: 20px;
             overflow: auto;
             position: relative;
         }
@@ -103,11 +103,14 @@
             align-items: center;
             gap: 40px;
             /* Vertical gap between generations */
-            min-width: max-content;
-            /* Allow horizontal scrolling */
+            width: max-content;
+            margin: 0 auto;
             position: relative;
-            padding-bottom: 40px;
+            padding: 40px;
+            padding-bottom: 80px;
             z-index: 2;
+            transform-origin: top center;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .generation {
@@ -334,10 +337,13 @@
         <div class="content-split">
             <!-- Visual Tree -->
             <div class="tree-section" id="treeSection">
-                <svg id="connectionsSvg"></svg>
                 <div class="tree-container" id="treeContainer">
-                    <!-- Configured via JS now for flexibility -->
+                    <svg id="connectionsSvg"></svg>
+                    <!-- Configured via JS -->
                 </div>
+                <button id="resetZoom"
+                    style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: bold;">Visa
+                    hela trädet / Show All</button>
             </div>
 
             <!-- List -->
@@ -393,6 +399,10 @@
         const listItems = {};
         const nodeElements = {};
 
+        let currentScale = 1;
+        let isZoomed = false;
+        const resetBtn = document.getElementById('resetZoom');
+
         function init() {
             renderTree();
             renderList();
@@ -400,8 +410,50 @@
             // Wait for DOM layout
             setTimeout(() => {
                 drawConnections();
-                window.addEventListener('resize', drawConnections);
+                handleInitialScaling();
+                window.addEventListener('resize', () => {
+                    drawConnections();
+                    if (!isZoomed) handleInitialScaling();
+                });
             }, 100);
+
+            resetBtn.addEventListener('click', resetZoom);
+            document.getElementById('treeSection').addEventListener('click', (e) => {
+                if (e.target.id === 'treeSection' || e.target.id === 'treeContainer') {
+                    resetZoom();
+                }
+            });
+        }
+
+        function isMobile() {
+            return window.innerWidth <= 600;
+        }
+
+        function handleInitialScaling() {
+            if (isMobile()) {
+                fitTree();
+            } else {
+                treeContainer.style.transform = 'scale(1) translateX(0)';
+                currentScale = 1;
+                resetBtn.style.display = 'none';
+            }
+        }
+
+        function fitTree() {
+            const section = document.getElementById('treeSection');
+            const availableWidth = section.clientWidth - 40;
+            const treeWidth = treeContainer.scrollWidth;
+
+            if (treeWidth > availableWidth) {
+                currentScale = availableWidth / treeWidth;
+                const tx = (availableWidth - treeWidth) / 2;
+                treeContainer.style.transform = `translateX(${tx}px) scale(${currentScale})`;
+                isZoomed = false;
+                resetBtn.style.display = 'none';
+            } else {
+                treeContainer.style.transform = 'scale(1) translateX(0)';
+                currentScale = 1;
+            }
         }
 
         function renderTree() {
@@ -456,10 +508,11 @@
                             processed.add(m.id);
                         });
 
-                        // Box itself click behavior?
-                        // Maybe just clicking the white space in the box plays group name?
                         box.addEventListener('click', (e) => {
-                            if (e.target === box) playPronunciation(groups[groupKey].sv);
+                            if (e.target === box || e.target === label) {
+                                if (isMobile()) zoomTo(box);
+                                playPronunciation(groups[groupKey].sv);
+                            }
                         });
 
                         row.appendChild(box);
@@ -495,11 +548,63 @@
             el.addEventListener('mouseleave', () => unhighlightAll());
             el.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent bubbling to box
+                if (isMobile()) zoomTo(el);
                 playPronunciation(person.sv);
                 scrollToItem(person.id);
             });
 
             return el;
+        }
+
+        function zoomTo(element) {
+            const section = document.getElementById('treeSection');
+            const sectionRect = section.getBoundingClientRect();
+            const elRect = element.getBoundingClientRect();
+
+            // If already zoomed, maybe zoom out? Or just zoom to this one.
+            isZoomed = true;
+            resetBtn.style.display = 'block';
+
+            // Calculate the position of the element relative to the treeContainer *unscaled*
+            // But since we want to center it in the viewport...
+
+            const targetScale = 1.2; // Zoom in level
+            const containerRect = treeContainer.getBoundingClientRect();
+
+            // Get center of element relative to section
+            const elCenterX = elRect.left + elRect.width / 2 - sectionRect.left;
+            const elCenterY = elRect.top + elRect.height / 2 - sectionRect.top;
+
+            // We want the element center to be at section center
+            const sectionCenterX = sectionRect.width / 2;
+            const sectionCenterY = sectionRect.height / 2;
+
+            // Current center position in the scrollable area
+            const scrollX = section.scrollLeft;
+            const scrollY = section.scrollTop;
+
+            // This is complex because of CSS scale. 
+            // Simpler approach: toggle a class or just set transform.
+            // Let's use a simpler "Active" state for mobile zoom.
+
+            treeContainer.style.transform = `scale(${targetScale}) translateX(0)`;
+            currentScale = targetScale;
+
+            // Scroll to center the element
+            setTimeout(() => {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }, 50);
+        }
+
+        function resetZoom() {
+            if (isMobile()) {
+                fitTree();
+            } else {
+                treeContainer.style.transform = 'scale(1) translateX(0)';
+                currentScale = 1;
+            }
+            isZoomed = false;
+            resetBtn.style.display = 'none';
         }
 
         function renderList() {
@@ -537,43 +642,22 @@
         }
 
         function drawConnections() {
-            // Need to handle SVG properly.
-            // Since we moved nodes into boxes, their offsets might be relative to box or page?
-            // getBoundingClientRect is always viewport relative, which is good.
-            // We want coords relative to treeContainer (where SVG is).
-
-            treeContainer.appendChild(svg);
+            // Since SVG is inside treeContainer, we need it to cover the whole container
             const w = treeContainer.scrollWidth;
             const h = treeContainer.scrollHeight;
 
-            svg.setAttribute('width', Math.max(w, treeContainer.clientWidth));
-            svg.setAttribute('height', Math.max(h, treeContainer.clientHeight));
+            svg.setAttribute('width', w);
+            svg.setAttribute('height', h);
+            svg.style.width = w + 'px';
+            svg.style.height = h + 'px';
 
             svg.innerHTML = '';
 
+            // Reset transition for accurate rects
+            const originalTransition = treeContainer.style.transition;
+            treeContainer.style.transition = 'none';
+
             const containerRect = treeContainer.getBoundingClientRect();
-            // Important: We need to account for scrolling if we use treeContainer as reference frame?
-            // If treeContainer scrolls, getBoundingClientRect() moves.
-            // SVG is inside treeContainer now (appended above). 
-            // So SVG moves with content.
-            // So we need coords relative to the top-left of the SCROLLED CONTENT.
-
-            // To get (x,y) inside the scrollable area:
-            // x = rect.left - containerRect.left + container.scrollLeft
-            // y = rect.top - containerRect.top + container.scrollTop
-
-            // Correction: we appended SVG to treeContainer. treeContainer is a flex-col.
-            // If treeContainer has overflow, then SVG needs to be big and pos absolute?
-            // Actually, `tree-section` has overflow: auto, NOT `tree-container`.
-            // `tree-container` just grows.
-            // `tree-section` is the scroll parent.
-            // `svg` is absolute in `tree-container`.
-            // So `svg` 0,0 is `tree-container` top-left.
-
-            // So logic:
-            // x = rect.left - containerRect.left
-            // y = rect.top - containerRect.top
-            // (Since treeContainer moves with scroll, this delta represents position inside treeContainer)
 
             const drawnPartners = new Set();
             familyData.forEach(p => {
@@ -619,7 +703,7 @@
                             // Find the bottom of the parent's container (box or node itself)
                             const parentContainer = pNode.closest('.group-box') || pNode;
                             const pContainerRect = parentContainer.getBoundingClientRect();
-                            const bottom = pContainerRect.bottom - containerRect.top;
+                            const bottom = (pContainerRect.bottom - containerRect.top) / currentScale;
                             if (bottom > maxParentBottom) maxParentBottom = bottom;
                         }
                     });
@@ -630,7 +714,7 @@
                         // Find the top of the child's container
                         const childContainer = cNode.closest('.group-box') || cNode;
                         const cContainerRect = childContainer.getBoundingClientRect();
-                        const childTop = cContainerRect.top - containerRect.top;
+                        const childTop = (cContainerRect.top - containerRect.top) / currentScale;
 
                         // Position midY exactly half-way between parent bottom and child top
                         const midY = (maxParentBottom + childTop) / 2;
@@ -638,13 +722,16 @@
                     }
                 }
             });
+
+            treeContainer.style.transition = originalTransition;
         }
 
         function getCenter(el, containerRect) {
             const rect = el.getBoundingClientRect();
+            // Account for scale: (target - container) / scale
             return {
-                x: rect.left + rect.width / 2 - containerRect.left,
-                y: rect.top + rect.height / 2 - containerRect.top
+                x: (rect.left + rect.width / 2 - containerRect.left) / currentScale,
+                y: (rect.top + rect.height / 2 - containerRect.top) / currentScale
             };
         }
 

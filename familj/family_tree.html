@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Familjeträd - Family Tree</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1e293b;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            width: 100%;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            z-index: 10;
+            background: white;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .content-split {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Tree Section */
+        .tree-section {
+            flex: 1;
+            background: #f8fafc;
+            /* pattern overlay */
+            background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
+            background-size: 20px 20px;
+
+            padding: 20px;
+            overflow: auto;
+            position: relative;
+        }
+
+        /* SVG Overlay */
+        #connectionsSvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: #06b6d4;
+            stroke-width: 1;
+            fill: none;
+            transition: stroke 0.3s, stroke-width 0.3s;
+        }
+
+        .connection-line.active {
+            stroke: #0891b2;
+            stroke-width: 3;
+        }
+
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            /* Vertical gap between generations */
+            width: max-content;
+            margin: 0 auto;
+            position: relative;
+            padding: 40px;
+            padding-bottom: 80px;
+            z-index: 2;
+            transform-origin: top center;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .generation {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            position: relative;
+            align-items: flex-start;
+            /* Align boxes to top */
+        }
+
+        /* Group Styling */
+        .group-box {
+            border: 2px dashed #f59e0b;
+            border-radius: 12px;
+            padding: 10px;
+            padding-top: 22px;
+            display: flex;
+            gap: 10px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+
+        .group-box:hover {
+            border-color: #ea580c;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .group-label {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+            transition: transform 0.2s;
+        }
+
+        .group-label:hover {
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .person-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            width: 85px;
+            z-index: 2;
+        }
+
+        /* Align standalone nodes with group avatars */
+        .generation>.person-node {
+            margin-top: 24px;
+        }
+
+        .person-node:hover {
+            transform: scale(1.1);
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 3px solid white;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Gender Colors */
+        .male .avatar {
+            background: #4fd1c5;
+        }
+
+        .female .avatar {
+            background: #f687b3;
+        }
+
+        .me .avatar {
+            background: #667eea;
+        }
+
+        .name-label {
+            background: #2d3748;
+            color: white;
+            padding: 3px 7px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .eng-label {
+            font-size: 10px;
+            color: #718096;
+            margin-top: -3px;
+            text-align: center;
+            line-height: 1.2;
+            max-width: 100px;
+        }
+
+        /* List Section */
+        .list-section {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .list-header {
+            padding: 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+        }
+
+        .word-list {
+            padding: 15px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .word-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .word-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e0;
+        }
+
+        .word-item.active {
+            background: #eff6ff;
+            border-color: #667eea;
+        }
+
+        .word-info {
+            flex-grow: 1;
+        }
+
+        .word-sv {
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .word-en {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .speaker-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 6px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .speaker-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 900px) {
+            .content-split {
+                flex-direction: column;
+            }
+
+            .tree-section {
+                height: 60vh;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .list-section {
+                width: 100%;
+                height: 40vh;
+                border-left: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Familjeträd</h1>
+            <p class="subtitle">Family Tree</p>
+        </header>
+
+        <div class="content-split">
+            <!-- Visual Tree -->
+            <div class="tree-section" id="treeSection">
+                <div class="tree-container" id="treeContainer">
+                    <svg id="connectionsSvg"></svg>
+                    <!-- Configured via JS -->
+                </div>
+                <button id="resetZoom"
+                    style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: bold;">Visa
+                    hela trädet / Show All</button>
+            </div>
+
+            <!-- List -->
+            <div class="list-section">
+                <div class="list-header">Vocabulary</div>
+                <div class="word-list" id="wordList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extended Data
+        // 'group' property links to the 'groups' configuration object
+        const familyData = [
+            // Generation 1
+            { id: 'farfar', sv: 'Farfar', en: "Grandfather (Dad's dad)", type: 'male', gen: 1, partners: ['farmor'], group: 'farforaldrar' },
+            { id: 'farmor', sv: 'Farmor', en: "Grandmother (Dad's mom)", type: 'female', gen: 1, partners: ['farfar'], group: 'farforaldrar' },
+            { id: 'morfar', sv: 'Morfar', en: "Grandfather (Mom's dad)", type: 'male', gen: 1, partners: ['mormor'], group: 'morforaldrar' },
+            { id: 'mormor', sv: 'Mormor', en: "Grandmother (Mom's mom)", type: 'female', gen: 1, partners: ['morfar'], group: 'morforaldrar' },
+
+            // Generation 2
+            { id: 'farbror', sv: 'Farbror', en: "Uncle (Dad's brother)", type: 'male', gen: 2, parents: ['farfar', 'farmor'] },
+            { id: 'faster', sv: 'Faster', en: "Aunt (Dad's sister)", type: 'female', gen: 2, parents: ['farfar', 'farmor'] },
+            { id: 'pappa', sv: 'Pappa', en: "Dad", type: 'male', gen: 2, parents: ['farfar', 'farmor'], partners: ['mamma'], group: 'foraldrar' },
+            { id: 'mamma', sv: 'Mamma', en: "Mom", type: 'female', gen: 2, parents: ['morfar', 'mormor'], partners: ['pappa'], group: 'foraldrar' },
+            { id: 'morbror', sv: 'Morbror', en: "Uncle (Mom's brother)", type: 'male', gen: 2, parents: ['morfar', 'mormor'] },
+            { id: 'moster', sv: 'Moster', en: "Aunt (Mom's sister)", type: 'female', gen: 2, parents: ['morfar', 'mormor'] },
+
+            // Generation 3
+            { id: 'kusin_p', sv: 'Kusin', en: "Cousin (Paternal)", type: 'male', gen: 3, parents: ['farbror'] },
+            { id: 'bror', sv: 'Bror', en: "Brother", type: 'male', gen: 3, parents: ['pappa', 'mamma'], group: 'syskon' },
+            { id: 'jag', sv: 'Jag', en: "Me", type: 'me', gen: 3, parents: ['pappa', 'mamma'], group: 'syskon' },
+            { id: 'syster', sv: 'Syster', en: "Sister", type: 'female', gen: 3, parents: ['pappa', 'mamma'], group: 'syskon' },
+            { id: 'kusin_m', sv: 'Kusin', en: "Cousin (Maternal)", type: 'female', gen: 3, parents: ['moster'] },
+
+            // Generation 4 (Barnbarn)
+            { id: 'son', sv: 'Son', en: "Son (Barnbarn)", type: 'male', gen: 4, parents: ['jag'], group: 'barnbarn' },
+            { id: 'dotter', sv: 'Dotter', en: "Daughter (Barnbarn)", type: 'female', gen: 4, parents: ['jag'], group: 'barnbarn' },
+        ];
+
+        // Group definitions
+        const groups = {
+            'farforaldrar': { sv: 'Farföräldrar', en: 'Paternal Grandparents' },
+            'morforaldrar': { sv: 'Morföräldrar', en: 'Maternal Grandparents' },
+            'foraldrar': { sv: 'Föräldrar', en: 'Parents' },
+            'syskon': { sv: 'Syskon', en: 'Siblings' },
+            'barnbarn': { sv: 'Barnbarn', en: 'Grandchildren' }
+        };
+
+        const treeContainer = document.getElementById('treeContainer');
+        const wordList = document.getElementById('wordList');
+        const svg = document.getElementById('connectionsSvg');
+        const listItems = {};
+        const nodeElements = {};
+
+        let currentScale = 1;
+        let isZoomed = false;
+        const resetBtn = document.getElementById('resetZoom');
+
+        function init() {
+            renderTree();
+            renderList();
+
+            // Wait for DOM layout
+            setTimeout(() => {
+                drawConnections();
+                handleInitialScaling();
+                window.addEventListener('resize', () => {
+                    drawConnections();
+                    if (!isZoomed) handleInitialScaling();
+                });
+            }, 100);
+
+            resetBtn.addEventListener('click', resetZoom);
+            document.getElementById('treeSection').addEventListener('click', (e) => {
+                if (e.target.id === 'treeSection' || e.target.id === 'treeContainer') {
+                    resetZoom();
+                }
+            });
+        }
+
+        function isMobile() {
+            return window.innerWidth <= 600;
+        }
+
+        function handleInitialScaling() {
+            if (isMobile()) {
+                fitTree();
+            } else {
+                treeContainer.style.transform = 'scale(1) translateX(0)';
+                currentScale = 1;
+                resetBtn.style.display = 'none';
+            }
+        }
+
+        function fitTree() {
+            const section = document.getElementById('treeSection');
+            const availableWidth = section.clientWidth - 40;
+            const treeWidth = treeContainer.scrollWidth;
+
+            if (treeWidth > availableWidth) {
+                currentScale = availableWidth / treeWidth;
+                const tx = (availableWidth - treeWidth) / 2;
+                treeContainer.style.transform = `translateX(${tx}px) scale(${currentScale})`;
+                isZoomed = false;
+                resetBtn.style.display = 'none';
+            } else {
+                treeContainer.style.transform = 'scale(1) translateX(0)';
+                currentScale = 1;
+            }
+        }
+
+        function renderTree() {
+            // Group by generation
+            const generations = {};
+            familyData.forEach(p => {
+                if (!generations[p.gen]) generations[p.gen] = [];
+                generations[p.gen].push(p);
+            });
+
+            const sortedGens = Object.keys(generations).sort();
+
+            sortedGens.forEach(genNum => {
+                const row = document.createElement('div');
+                row.className = 'generation';
+                row.id = `gen${genNum}`;
+
+                const genMembers = generations[genNum];
+                const processed = new Set();
+
+                genMembers.forEach(person => {
+                    if (processed.has(person.id)) return;
+
+                    if (person.group && groups[person.group]) {
+                        // Gather everyone in this group that is in this generation
+                        const groupKey = person.group;
+                        const groupMembers = genMembers.filter(m => m.group === groupKey);
+
+                        // Create Group Box
+                        const box = document.createElement('div');
+                        box.className = 'group-box';
+
+                        // Create Label
+                        const label = document.createElement('div');
+                        label.className = 'group-label';
+                        label.textContent = groups[groupKey].sv;
+                        label.title = groups[groupKey].en;
+
+                        // Play sound on label click
+                        label.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            playPronunciation(groups[groupKey].sv);
+                        });
+
+                        box.appendChild(label);
+
+                        // Add members to box
+                        groupMembers.forEach(m => {
+                            const node = createNode(m);
+                            box.appendChild(node);
+                            nodeElements[m.id] = node;
+                            processed.add(m.id);
+                        });
+
+                        box.addEventListener('click', (e) => {
+                            if (e.target === box || e.target === label) {
+                                if (isMobile()) zoomTo(box);
+                                playPronunciation(groups[groupKey].sv);
+                            }
+                        });
+
+                        row.appendChild(box);
+
+                    } else {
+                        // Standalone node
+                        const node = createNode(person);
+                        row.appendChild(node);
+                        nodeElements[person.id] = node;
+                        processed.add(person.id);
+                    }
+                });
+
+                treeContainer.appendChild(row);
+            });
+        }
+
+        function createNode(person) {
+            const el = document.createElement('div');
+            el.className = `person-node ${person.type}`;
+            el.dataset.id = person.id;
+
+            // Initials
+            const initials = person.sv.substring(0, 2).toUpperCase();
+
+            el.innerHTML = `
+                <div class="avatar">${initials}</div>
+                <span class="name-label">${person.sv}</span>
+                <span class="eng-label">${person.en}</span>
+            `;
+
+            el.addEventListener('mouseenter', () => highlight(person.id));
+            el.addEventListener('mouseleave', () => unhighlightAll());
+            el.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent bubbling to box
+                if (isMobile()) zoomTo(el);
+                playPronunciation(person.sv);
+                scrollToItem(person.id);
+            });
+
+            return el;
+        }
+
+        function zoomTo(element) {
+            const section = document.getElementById('treeSection');
+            const sectionRect = section.getBoundingClientRect();
+            const elRect = element.getBoundingClientRect();
+
+            // If already zoomed, maybe zoom out? Or just zoom to this one.
+            isZoomed = true;
+            resetBtn.style.display = 'block';
+
+            // Calculate the position of the element relative to the treeContainer *unscaled*
+            // But since we want to center it in the viewport...
+
+            const targetScale = 1.2; // Zoom in level
+            const containerRect = treeContainer.getBoundingClientRect();
+
+            // Get center of element relative to section
+            const elCenterX = elRect.left + elRect.width / 2 - sectionRect.left;
+            const elCenterY = elRect.top + elRect.height / 2 - sectionRect.top;
+
+            // We want the element center to be at section center
+            const sectionCenterX = sectionRect.width / 2;
+            const sectionCenterY = sectionRect.height / 2;
+
+            // Current center position in the scrollable area
+            const scrollX = section.scrollLeft;
+            const scrollY = section.scrollTop;
+
+            // This is complex because of CSS scale. 
+            // Simpler approach: toggle a class or just set transform.
+            // Let's use a simpler "Active" state for mobile zoom.
+
+            treeContainer.style.transform = `scale(${targetScale}) translateX(0)`;
+            currentScale = targetScale;
+
+            // Scroll to center the element
+            setTimeout(() => {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }, 50);
+        }
+
+        function resetZoom() {
+            if (isMobile()) {
+                fitTree();
+            } else {
+                treeContainer.style.transform = 'scale(1) translateX(0)';
+                currentScale = 1;
+            }
+            isZoomed = false;
+            resetBtn.style.display = 'none';
+        }
+
+        function renderList() {
+            familyData.forEach(person => {
+                const li = document.createElement('div');
+                li.className = 'word-item';
+                li.dataset.id = person.id;
+                li.innerHTML = `
+                    <div class="word-info">
+                        <div class="word-sv">${person.sv}</div>
+                        <div class="word-en">${person.en}</div>
+                    </div>
+                    <button class="speaker-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-4 0h-2.5l-5 5H0v8h2.5l5 5H10V3.23zm-4 3.2l2.5-2.5v16.15l-2.5-2.5H3v-11.16h3z" opacity=".5"/><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/></svg>
+                    </button>
+                `;
+
+                li.addEventListener('mouseenter', () => highlight(person.id));
+                li.addEventListener('mouseleave', () => unhighlightAll());
+                li.addEventListener('click', () => {
+                    playPronunciation(person.sv);
+                    highlight(person.id);
+                    const node = nodeElements[person.id];
+                    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                });
+
+                li.querySelector('.speaker-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playPronunciation(person.sv);
+                });
+
+                wordList.appendChild(li);
+                listItems[person.id] = li;
+            });
+        }
+
+        function drawConnections() {
+            // Since SVG is inside treeContainer, we need it to cover the whole container
+            const w = treeContainer.scrollWidth;
+            const h = treeContainer.scrollHeight;
+
+            svg.setAttribute('width', w);
+            svg.setAttribute('height', h);
+            svg.style.width = w + 'px';
+            svg.style.height = h + 'px';
+
+            svg.innerHTML = '';
+
+            // Reset transition for accurate rects
+            const originalTransition = treeContainer.style.transition;
+            treeContainer.style.transition = 'none';
+
+            const containerRect = treeContainer.getBoundingClientRect();
+
+            const drawnPartners = new Set();
+            familyData.forEach(p => {
+                if (p.partners) {
+                    p.partners.forEach(partnerId => {
+                        const pairId = [p.id, partnerId].sort().join('-');
+                        if (drawnPartners.has(pairId)) return;
+
+                        const pNode = nodeElements[p.id];
+                        const partNode = nodeElements[partnerId];
+
+                        if (pNode && partNode) {
+                            const p1 = getCenter(pNode, containerRect);
+                            const p2 = getCenter(partNode, containerRect);
+                            drawPath(p1, p2, 'partner');
+                            drawnPartners.add(pairId);
+                        }
+                    });
+                }
+            });
+
+            familyData.forEach(child => {
+                if (child.parents && child.parents.length > 0) {
+                    const cNode = nodeElements[child.id];
+                    if (!cNode) return;
+
+                    const childPos = getCenter(cNode, containerRect);
+                    childPos.y -= 35; // Top of node
+
+                    let parentX = 0;
+                    let parentY = 0;
+                    let count = 0;
+                    let maxParentBottom = 0;
+
+                    child.parents.forEach(pid => {
+                        const pNode = nodeElements[pid];
+                        if (pNode) {
+                            const pPos = getCenter(pNode, containerRect);
+                            parentX += pPos.x;
+                            parentY += pPos.y;
+                            count++;
+
+                            // Find the bottom of the parent's container (box or node itself)
+                            const parentContainer = pNode.closest('.group-box') || pNode;
+                            const pContainerRect = parentContainer.getBoundingClientRect();
+                            const bottom = (pContainerRect.bottom - containerRect.top) / currentScale;
+                            if (bottom > maxParentBottom) maxParentBottom = bottom;
+                        }
+                    });
+
+                    if (count > 0) {
+                        const source = { x: parentX / count, y: (parentY / count) + 0 };
+
+                        // Find the top of the child's container
+                        const childContainer = cNode.closest('.group-box') || cNode;
+                        const cContainerRect = childContainer.getBoundingClientRect();
+                        const childTop = (cContainerRect.top - containerRect.top) / currentScale;
+
+                        // Position midY exactly half-way between parent bottom and child top
+                        const midY = (maxParentBottom + childTop) / 2;
+                        drawElbowPath(source, childPos, midY);
+                    }
+                }
+            });
+
+            treeContainer.style.transition = originalTransition;
+        }
+
+        function getCenter(el, containerRect) {
+            const rect = el.getBoundingClientRect();
+            // Account for scale: (target - container) / scale
+            return {
+                x: (rect.left + rect.width / 2 - containerRect.left) / currentScale,
+                y: (rect.top + rect.height / 2 - containerRect.top) / currentScale
+            };
+        }
+
+        function drawPath(p1, p2, type) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('class', 'connection-line');
+            const d = `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+            path.setAttribute('d', d);
+            svg.appendChild(path);
+        }
+
+        function drawElbowPath(start, end, midY) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('class', 'connection-line');
+
+            const actualMidY = midY || (start.y + end.y) / 2;
+            const d = `M ${start.x} ${start.y} L ${start.x} ${actualMidY} L ${end.x} ${actualMidY} L ${end.x} ${end.y}`;
+            path.setAttribute('d', d);
+            svg.appendChild(path);
+        }
+
+        function highlight(id) {
+            unhighlightAll();
+            const li = listItems[id];
+            const node = nodeElements[id];
+
+            if (li) li.classList.add('active');
+            if (node) {
+                node.style.transform = 'scale(1.2) translateY(-5px)';
+                node.style.zIndex = '100'; // Bring to front
+            }
+        }
+
+        function unhighlightAll() {
+            document.querySelectorAll('.word-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.person-node').forEach(el => {
+                el.style.transform = '';
+                el.style.zIndex = '2';
+            });
+        }
+
+        function playPronunciation(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'sv-SE';
+            utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function scrollToItem(id) {
+            const li = listItems[id];
+            if (li) li.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

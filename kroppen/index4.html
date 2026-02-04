@@ -357,125 +357,7 @@
             box-shadow: 0 8px 20px rgba(246, 135, 179, 0.6) !important;
         }
 
-        /* Split Layout Styles */
-        .content-split {
-            display: flex;
-            gap: 40px;
-            align-items: flex-start;
-            /* Important for sticky to work */
-            height: calc(100vh - 140px);
-            /* Fill remaining height roughly */
-            min-height: 500px;
-        }
-
-        .image-section {
-            flex: 1;
-            /* Takes available space */
-            position: sticky;
-            top: 20px;
-            height: 100%;
-            /* Or auto if we want it to shrink wrap? */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        /* Adjust image wrapper for the split layout */
-        .image-wrapper {
-            max-height: 100%;
-            width: 100%;
-            min-height: 400px;
-            aspect-ratio: 1 / 1;
-            /* Maintain square aspect ratio */
-        }
-
-        .image-wrapper img {
-            max-height: 100%;
-        }
-
-        .list-section {
-            width: 350px;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .filter-controls {
-            flex-shrink: 0;
-            margin-bottom: 20px;
-        }
-
-        .word-list {
-            overflow-y: auto;
-            flex-grow: 1;
-            padding-right: 10px;
-            /* Space for scrollbar */
-            margin-top: 0;
-            /* Override previous margin */
-            align-content: flex-start;
-            /* Ensure grid items don't stretch weirdly */
-            display: grid;
-            grid-template-columns: 1fr;
-            /* Single column in list view looks better side-by-side */
-        }
-
-        /* Reset container to allow full width usage if creating a dashboard feel, 
-           or keep max-width but ensure it fits side-by-side */
-        .container {
-            max-width: 1400px;
-            /* Wider to accommodate split */
-            height: 95vh;
-            /* Fixed height for viewport filling */
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Mobile Responsive for Split */
-        @media (max-width: 900px) {
-            .container {
-                height: auto;
-                max-width: 800px;
-            }
-
-            .content-split {
-                flex-direction: column;
-                height: auto;
-            }
-
-            .image-section {
-                position: sticky;
-                top: 0;
-                z-index: 500;
-                /* Ensure it stays on top */
-                background: rgba(255, 255, 255, 0.95);
-                /* readability backdrop */
-                padding-bottom: 10px;
-                border-bottom: 1px solid #eee;
-                width: 100%;
-                height: 50vh;
-                /* Fixed height on mobile to ensure visibility */
-            }
-
-            .image-wrapper {
-                height: 100%;
-            }
-
-            .list-section {
-                width: 100%;
-                height: auto;
-                /* Let it flow */
-                overflow: visible;
-                /* Browser scroll handles it */
-            }
-
-            .word-list {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                /* Back to grid for mobile list */
-            }
-        }
-
+        /* Hide logic */
         .hidden {
             display: none !important;
         }
@@ -491,27 +373,21 @@
     <div class="container">
         <h1>Kroppens Delar</h1>
 
-        <div class="content-split">
-            <div class="image-section">
-                <div class="image-wrapper">
-                    <img src="kroppens-delar-svensk-2.png" alt="Kroppens delar" id="bodyImage">
-                    <!-- viewBox set to 1024 1024 for coordinate space -->
-                    <svg id="linesSvg" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet"></svg>
-                    <div id="hotspots"></div>
-                </div>
-                <p class="instructions">Håll muspekaren över numren eller orden!<br>(Hover over the numbers or words!)
-                </p>
-            </div>
-
-            <div class="list-section">
-                <div class="filter-controls">
-                    <button class="filter-btn active" data-filter="all">Alla (All)</button>
-                    <button class="filter-btn" data-filter="en">En-ord</button>
-                    <button class="filter-btn" data-filter="ett">Ett-ord</button>
-                </div>
-                <div class="word-list" id="wordList"></div>
-            </div>
+        <div class="filter-controls">
+            <button class="filter-btn active" data-filter="all">Alla (All)</button>
+            <button class="filter-btn" data-filter="en">En-ord</button>
+            <button class="filter-btn" data-filter="ett">Ett-ord</button>
         </div>
+
+        <div class="image-wrapper">
+            <img src="kroppens-delar-svensk-2.png" alt="Kroppens delar" id="bodyImage">
+            <!-- viewBox set to 1024 1024 for coordinate space -->
+            <svg id="linesSvg" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="hotspots"></div>
+        </div>
+        <p class="instructions">Håll muspekaren över numren eller orden!<br>(Hover over the numbers or words!)</p>
+
+        <div class="word-list" id="wordList"></div>
     </div>
 
     <!-- Load external data as a JS file to avoid CORS issues on local filesystem -->

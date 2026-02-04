@@ -49,7 +49,6 @@
             pointer-events: none;
             width: 100%;
             height: 100%;
-            object-fit: contain;
             display: none;
         }
 
@@ -164,35 +163,13 @@
         <div id="overlay"></div>
     </div>
 
+    <!-- Load external data -->
+    <script src="body_parts_data.js"></script>
+
     <script>
         // Start Data
-        // Migrated to array structure for 'anchors'
-        let bodyParts = [
-            { num: 1, word: 'ett huvud', x: 95, y: 38, anchors: [{ x: 140, y: 50 }] },
-            { num: 2, word: 'ett öga', x: 95, y: 83, anchors: [{ x: 135, y: 75 }] },
-            { num: 3, word: 'en näsa', x: 220, y: 63, anchors: [{ x: 165, y: 90 }] },
-            { num: 4, word: 'en mun', x: 220, y: 108, anchors: [{ x: 165, y: 110 }] },
-            { num: 5, word: 'en hals', x: 95, y: 138, anchors: [{ x: 150, y: 140 }] },
-            { num: 6, word: 'en axel', x: 390, y: 163, anchors: [{ x: 200, y: 175 }] },
-            { num: 7, word: 'ett bröst', x: 70, y: 223, anchors: [{ x: 130, y: 230 }] },
-            { num: 8, word: 'en mage', x: 40, y: 335, anchors: [{ x: 130, y: 325 }] },
-            { num: 9, word: 'en arm', x: 260, y: 270, anchors: [{ x: 210, y: 280 }] },
-            { num: 10, word: 'en hand', x: 280, y: 380, anchors: [{ x: 220, y: 370 }] },
-            { num: 11, word: 'ett ben', x: 310, y: 470, anchors: [{ x: 155, y: 500 }] },
-            { num: 12, word: 'en fot', x: 310, y: 638, anchors: [{ x: 165, y: 655 }] },
-            { num: 13, word: 'en nacke', x: 465, y: 113, anchors: [{ x: 420, y: 135 }] },
-            { num: 14, word: 'en rygg', x: 485, y: 248, anchors: [{ x: 425, y: 280 }] },
-            { num: 15, word: 'ett knäveck', x: 460, y: 503, anchors: [{ x: 415, y: 510 }] },
-            { num: 16, word: 'en vad', x: 480, y: 593, anchors: [{ x: 415, y: 585 }] },
-            { num: 17, word: 'ett öra', x: 520, y: 63, anchors: [{ x: 560, y: 75 }] },
-            { num: 18, word: 'en armbåge', x: 545, y: 283, anchors: [{ x: 590, y: 275 }] },
-            { num: 19, word: 'en stjärt', x: 545, y: 378, anchors: [{ x: 590, y: 365 }] },
-            { num: 20, word: 'ett finger', x: 685, y: 378, anchors: [{ x: 635, y: 390 }] },
-            { num: 21, word: 'ett lår', x: 665, y: 453, anchors: [{ x: 615, y: 465 }] },
-            { num: 22, word: 'ett knä', x: 665, y: 518, anchors: [{ x: 615, y: 520 }] },
-            { num: 23, word: 'en häl', x: 530, y: 638, anchors: [{ x: 570, y: 650 }] },
-            { num: 24, word: 'en tå', x: 705, y: 638, anchors: [{ x: 650, y: 655 }] }
-        ];
+        // Use external data
+        let bodyParts = typeof bodyPartsData !== 'undefined' ? bodyPartsData : [];
 
         const overlay = document.getElementById('overlay');
         const linesSvg = document.getElementById('linesSvg');

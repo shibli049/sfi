@@ -517,6 +517,7 @@
 
                 hotspot.addEventListener('mouseenter', () => highlight(part.num, true));
                 hotspot.addEventListener('mouseleave', () => highlight(part.num, false));
+                hotspot.addEventListener('click', () => playPronunciation(part.word)); // Click to speak
 
                 hotspotsContainer.appendChild(hotspot);
             });
@@ -543,8 +544,21 @@
                 wordItem.appendChild(wordNumber);
                 wordItem.appendChild(wordText);
 
+                // Speaker Icon
+                const speakerBtn = document.createElement('button');
+                speakerBtn.className = 'speaker-btn';
+                speakerBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-4 0h-2.5l-5 5H0v8h2.5l5 5H10V3.23zm-4 3.2l2.5-2.5v16.15l-2.5-2.5H3v-11.16h3z" opacity=".3"/><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/></svg>';
+                speakerBtn.title = "Lyssna (Listen)";
+                speakerBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent highlighting trigger loop if needed, though harmless here
+                    playPronunciation(part.word);
+                };
+
+                wordItem.appendChild(speakerBtn);
+
                 wordItem.addEventListener('mouseenter', () => highlight(part.num, true));
                 wordItem.addEventListener('mouseleave', () => highlight(part.num, false));
+                wordItem.addEventListener('click', () => playPronunciation(part.word)); // Row click also speaks? Or just button? User asked "add pronunciation to these words".
 
                 wordListContainer.appendChild(wordItem);
             });
@@ -559,15 +573,6 @@
                 if (wordItem) wordItem.classList.add('highlight');
                 if (hotspot) hotspot.classList.add('highlight');
                 lines.forEach(line => {
-                    // line.classList.add('highlight') // CSS handles stroke? 
-                    // Manual override or class based
-                    // Let's use specific colors based on category if we want, or generic
-                    // The CSS has specific rules for .hotspot.en:hover ~ ...
-                    // But we access via JS events often triggering from "wordItem" which might not be sibling to SVG
-
-                    // So we manually set styles or add class to wrapping container?
-                    // Let's just set styles for simplicity and robustness
-
                     // Check category
                     const box = wordItem || hotspot;
                     const isEtt = box && box.classList.contains('ett');
@@ -589,6 +594,52 @@
                 });
             }
         }
+
+        function playPronunciation(text) {
+            if (!('speechSynthesis' in window)) return;
+
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'sv-SE'; // Swedish
+            utterance.rate = 0.8; // Slightly slower for clarity
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Add CSS for speaker icon
+        const style = document.createElement('style');
+        style.textContent = `
+            .speaker-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                margin-left: auto;
+                padding: 4px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #a0aec0;
+                transition: all 0.2s;
+            }
+            .speaker-btn:hover {
+                background-color: rgba(0,0,0,0.05);
+                color: #667eea;
+                transform: scale(1.1);
+            }
+            .word-item.en .speaker-btn:hover { color: #319795; }
+            .word-item.ett .speaker-btn:hover { color: #d53f8c; }
+            
+            .word-item:hover .speaker-btn {
+                color: white; /* When row is highlighted, make icon white */
+            }
+            .word-item:hover .speaker-btn:hover {
+                background-color: rgba(255,255,255,0.2);
+            }
+        `;
+        document.head.appendChild(style);
 
         init();
 

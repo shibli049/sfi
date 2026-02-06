@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+---
+
+<Layout title="Svenska Inlärning - Start">
+    <div class="chapter-grid">
+        <Card 
+            title="Kroppen" 
+            badge="Chapter 1" 
+            icon="🧘" 
+            description="Learn the names of body parts. Interactive tool to identify and pronounce different parts of the human body."
+            href="/sfi/kroppen/"
+        />
+        <Card 
+            title="Familjen" 
+            badge="Chapter 2" 
+            icon="👨‍👩‍👧‍👦" 
+            description="Vocabulary related to family members and relationships. Learn words like mor, far, syster, bror."
+            href="/sfi/familj/"
+        />
+    </div>
+</Layout>

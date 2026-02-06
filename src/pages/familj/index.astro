@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { familyData, groups } from '../../data/family';
 
 const generations = [...new Set(familyData.map(p => p.gen))].sort((a, b) => a - b);
@@ -9,6 +10,7 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
 
 <Layout title="Familjeträd - Family Tree">
     <div class="exercise-container">
+        <Breadcrumbs currentPage="Familjen" />
         <div class="content-split">
             <div class="tree-section" id="treeSection">
                 <div class="tree-container" id="treeContainer">

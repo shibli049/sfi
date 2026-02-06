@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { bodyPartsData } from '../../data/body-parts';
 
 const title = "Kroppens Delar - Interactive";
@@ -7,6 +8,7 @@ const title = "Kroppens Delar - Interactive";
 
 <Layout title={title}>
     <div class="exercise-container">
+        <Breadcrumbs currentPage="Kroppen" />
         <h1>Kroppens Delar</h1>
 
         <div class="filter-controls">

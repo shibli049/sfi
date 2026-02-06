@@ -1,0 +1,448 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { familyData, groups } from '../../data/family';
+
+const generations = [...new Set(familyData.map(p => p.gen))].sort((a, b) => a - b);
+
+const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
+---
+
+<Layout title="Familjeträd - Family Tree">
+    <div class="exercise-container">
+        <div class="content-split">
+            <div class="tree-section" id="treeSection">
+                <div class="tree-container" id="treeContainer">
+                    <svg id="connectionsSvg"></svg>
+                    {generations.map(genNum => {
+                        const members = getGenMembers(genNum);
+                        const processed = new Set();
+                        return (
+                            <div class="generation" id={`gen${genNum}`}>
+                                {members.map(person => {
+                                    if (processed.has(person.id)) return null;
+                                    if (person.group && groups[person.group]) {
+                                        const groupKey = person.group;
+                                        const groupMembers = members.filter(m => m.group === groupKey);
+                                        groupMembers.forEach(m => processed.add(m.id));
+                                        return (
+                                            <div class="group-box" data-group={groupKey}>
+                                                <div class="group-label" title={groups[groupKey].en}>
+                                                    {groups[groupKey].sv}
+                                                </div>
+                                                {groupMembers.map(m => (
+                                                    <div class={`person-node ${m.type}`} data-id={m.id} data-sv={m.sv}>
+                                                        <div class="avatar">{m.sv.substring(0, 2).toUpperCase()}</div>
+                                                        <span class="name-label">{m.sv}</span>
+                                                        <span class="eng-label">{m.en}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    } else {
+                                        processed.add(person.id);
+                                        return (
+                                            <div class={`person-node ${person.type}`} data-id={person.id} data-sv={person.sv}>
+                                                <div class="avatar">{person.sv.substring(0, 2).toUpperCase()}</div>
+                                                <span class="name-label">{person.sv}</span>
+                                                <span class="eng-label">{person.en}</span>
+                                            </div>
+                                        );
+                                    }
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
+                <button id="resetZoom">Visa hela trädet / Show All</button>
+            </div>
+
+            <div class="list-section">
+                <div class="list-header">Vocabulary</div>
+                <div class="word-list" id="wordList">
+                    {familyData.map(person => (
+                        <div class="word-item" data-id={person.id} data-sv={person.sv}>
+                            <div class="word-info">
+                                <div class="word-sv">{person.sv}</div>
+                                <div class="word-en">{person.en}</div>
+                            </div>
+                            <button class="speaker-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-4 0h-2.5l-5 5H0v8h2.5l5 5H10V3.23zm-4 3.2l2.5-2.5v16.15l-2.5-2.5H3v-11.16h3z" opacity=".5"/>
+                                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .exercise-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        max-width: 1400px;
+        width: 100%;
+        height: calc(100vh - 160px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+
+    .content-split {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .tree-section {
+        flex: 1;
+        background: #f8fafc;
+        background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
+        background-size: 20px 20px;
+        padding: 20px;
+        overflow: auto;
+        position: relative;
+    }
+
+    #connectionsSvg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .tree-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+        width: max-content;
+        margin: 0 auto;
+        position: relative;
+        padding: 40px;
+        padding-bottom: 80px;
+        z-index: 2;
+        transform-origin: top center;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .generation {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        position: relative;
+        align-items: flex-start;
+    }
+
+    .group-box {
+        border: 2px dashed #f59e0b;
+        border-radius: 12px;
+        padding: 10px;
+        padding-top: 22px;
+        display: flex;
+        gap: 10px;
+        position: relative;
+        background: rgba(255, 255, 255, 0.4);
+        transition: all 0.3s;
+    }
+
+    .group-label {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #667eea;
+        color: white;
+        padding: 2px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        white-space: nowrap;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 5;
+    }
+
+    .person-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: transform 0.2s;
+        position: relative;
+        width: 85px;
+        z-index: 2;
+    }
+
+    .generation > .person-node { margin-top: 24px; }
+
+    .avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 3px solid white;
+    }
+
+    .male .avatar { background: #4fd1c5; }
+    .female .avatar { background: #f687b3; }
+    .me .avatar { background: #667eea; }
+
+    .name-label {
+        background: #2d3748;
+        color: white;
+        padding: 3px 7px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .eng-label {
+        font-size: 10px;
+        color: #718096;
+        text-align: center;
+        line-height: 1.2;
+        max-width: 100px;
+    }
+
+    .list-section {
+        width: 320px;
+        background: white;
+        border-left: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    .list-header {
+        padding: 15px;
+        font-weight: bold;
+        border-bottom: 1px solid #f1f5f9;
+        color: #475569;
+    }
+
+    .word-list { padding: 15px; overflow-y: auto; flex: 1; }
+
+    .word-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .word-item:hover, .word-item.active {
+        background: #eff6ff;
+        border-color: #667eea;
+    }
+
+    .word-info { flex-grow: 1; }
+    .word-sv { font-weight: bold; color: #1e293b; font-size: 14px; }
+    .word-en { font-size: 12px; color: #64748b; }
+
+    .speaker-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        padding: 6px;
+        border-radius: 50%;
+    }
+
+    #resetZoom {
+        display: none;
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        font-weight: bold;
+    }
+
+    @media (max-width: 900px) {
+        .content-split { flex-direction: column; }
+        .tree-section { height: 60vh; }
+        .list-section { width: 100%; height: 40vh; border-left: none; }
+    }
+</style>
+
+<script>
+    import { familyData } from '../../data/family';
+
+    const treeContainer = document.getElementById('treeContainer');
+    const svg = document.getElementById('connectionsSvg');
+    const resetBtn = document.getElementById('resetZoom');
+    const treeSection = document.getElementById('treeSection');
+
+    let currentScale = 1;
+    let isZoomed = false;
+
+    function playPronunciation(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'sv-SE';
+        utterance.rate = 0.8;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function getCenter(el, containerRect) {
+        const rect = el.getBoundingClientRect();
+        return {
+            x: (rect.left + rect.width / 2 - containerRect.left) / currentScale,
+            y: (rect.top + rect.height / 2 - containerRect.top) / currentScale
+        };
+    }
+
+    function drawConnections() {
+        const w = treeContainer.scrollWidth;
+        const h = treeContainer.scrollHeight;
+        svg.setAttribute('width', w);
+        svg.setAttribute('height', h);
+        svg.innerHTML = '';
+
+        const containerRect = treeContainer.getBoundingClientRect();
+        const drawnPartners = new Set();
+        const nodeElements = {};
+        document.querySelectorAll('.person-node').forEach(el => nodeElements[el.dataset.id] = el);
+
+        familyData.forEach(p => {
+            if (p.partners) {
+                p.partners.forEach(pid => {
+                    const pairId = [p.id, pid].sort().join('-');
+                    if (drawnPartners.has(pairId)) return;
+                    const n1 = nodeElements[p.id];
+                    const n2 = nodeElements[pid];
+                    if (n1 && n2) {
+                        const p1 = getCenter(n1, containerRect);
+                        const p2 = getCenter(n2, containerRect);
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+                        line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+                        line.setAttribute('stroke', '#06b6d4');
+                        svg.appendChild(line);
+                        drawnPartners.add(pairId);
+                    }
+                });
+            }
+        });
+
+        familyData.forEach(child => {
+            if (child.parents) {
+                const cNode = nodeElements[child.id];
+                if (!cNode) return;
+                const childPos = getCenter(cNode, containerRect);
+                childPos.y -= 35;
+
+                let px = 0, py = 0, count = 0, maxBottom = 0;
+                child.parents.forEach(pid => {
+                    const pNode = nodeElements[pid];
+                    if (pNode) {
+                        const pos = getCenter(pNode, containerRect);
+                        px += pos.x; py += pos.y; count++;
+                        const container = pNode.closest('.group-box') || pNode;
+                        const b = (container.getBoundingClientRect().bottom - containerRect.top) / currentScale;
+                        if (b > maxBottom) maxBottom = b;
+                    }
+                });
+
+                if (count > 0) {
+                    const start = { x: px / count, y: py / count };
+                    const childTop = (cNode.closest('.group-box') || cNode).getBoundingClientRect().top - containerRect.top / currentScale;
+                    const midY = (maxBottom + childTop) / 2 || (start.y + childPos.y) / 2;
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${start.x} ${start.y} L ${start.x} ${midY} L ${childPos.x} ${midY} L ${childPos.x} ${childPos.y}`);
+                    path.setAttribute('stroke', '#06b6d4');
+                    path.setAttribute('fill', 'none');
+                    svg.appendChild(path);
+                }
+            }
+        });
+    }
+
+    function fitTree() {
+        const availableWidth = treeSection.clientWidth - 40;
+        const treeWidth = treeContainer.scrollWidth;
+        if (treeWidth > availableWidth) {
+            currentScale = availableWidth / treeWidth;
+            treeContainer.style.transform = `translateX(${(availableWidth - treeWidth) / 2}px) scale(${currentScale})`;
+            isZoomed = false;
+            resetBtn.style.display = 'none';
+        }
+    }
+
+    function resetZoom() {
+        if (window.innerWidth <= 600) fitTree();
+        else treeContainer.style.transform = 'scale(1)';
+        isZoomed = false;
+        resetBtn.style.display = 'none';
+        drawConnections();
+    }
+
+    function highlight(id) {
+        document.querySelectorAll('.word-item, .person-node').forEach(el => el.classList.remove('active'));
+        const li = document.querySelector(`.word-item[data-id="${id}"]`);
+        const node = document.querySelector(`.person-node[data-id="${id}"]`);
+        li?.classList.add('active');
+        node?.classList.add('active');
+        if (node) {
+            node.style.transform = 'scale(1.2) translateY(-5px)';
+            node.style.zIndex = '100';
+        }
+    }
+
+    document.querySelectorAll('.person-node, .word-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = el.dataset.id;
+            playPronunciation(el.dataset.sv);
+            highlight(id);
+            if (window.innerWidth <= 600) {
+                const node = document.querySelector(`.person-node[data-id="${id}"]`);
+                if (node) {
+                    isZoomed = true; resetBtn.style.display = 'block';
+                    treeContainer.style.transform = 'scale(1.2)';
+                    setTimeout(() => node.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+                }
+            }
+        });
+    });
+
+    window.addEventListener('load', () => {
+        drawConnections();
+        if (window.innerWidth <= 600) fitTree();
+    });
+    window.addEventListener('resize', () => {
+        drawConnections();
+        if (!isZoomed && window.innerWidth <= 600) fitTree();
+    });
+
+    resetBtn.addEventListener('click', resetZoom);
+</script>

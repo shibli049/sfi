@@ -1,0 +1,362 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { bodyPartsData } from '../../data/body-parts';
+
+const title = "Kroppens Delar - Interactive";
+---
+
+<Layout title={title}>
+    <div class="exercise-container">
+        <h1>Kroppens Delar</h1>
+
+        <div class="filter-controls">
+            <button class="filter-btn active" data-filter="all">Alla (All)</button>
+            <button class="filter-btn" data-filter="en">En-ord</button>
+            <button class="filter-btn" data-filter="ett">Ett-ord</button>
+        </div>
+
+        <div class="image-wrapper">
+            <img src="/sfi/kroppens-delar-svensk-2.png" alt="Kroppens delar" id="bodyImage">
+            <svg id="linesSvg" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet">
+                {bodyPartsData.map(part => {
+                    const category = part.word.toLowerCase().startsWith('ett ') ? 'ett' : (part.word.toLowerCase().startsWith('en ') ? 'en' : 'other');
+                    const anchors = part.anchors || [{ x: part.x, y: part.y }]; // Note: in original it was bodyX, bodyY or anchor. Let's stick to anchors.
+                    return anchors.map(anchor => (
+                        <line 
+                            class="connection-line" 
+                            x1={anchor.x} 
+                            y1={anchor.y} 
+                            x2={part.x} 
+                            y2={part.y} 
+                            data-num={part.num}
+                            data-category={category}
+                        />
+                    ));
+                })}
+            </svg>
+            <div id="hotspots">
+                {bodyPartsData.map(part => {
+                    const category = part.word.toLowerCase().startsWith('ett ') ? 'ett' : (part.word.toLowerCase().startsWith('en ') ? 'en' : 'other');
+                    return (
+                        <div 
+                            class={`hotspot ${category}`} 
+                            style={`left: ${(part.x / 1024 * 100)}%; top: ${(part.y / 1024 * 100)}%`}
+                            data-num={part.num}
+                            data-category={category}
+                            data-word={part.word}
+                        >
+                            {part.num}
+                            <div class="label">{part.word}</div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+        <p class="instructions">Håll muspekaren över numren eller orden!<br>(Hover over the numbers or words!)</p>
+
+        <div class="word-list" id="wordList">
+            {bodyPartsData.map(part => {
+                const category = part.word.toLowerCase().startsWith('ett ') ? 'ett' : (part.word.toLowerCase().startsWith('en ') ? 'en' : 'other');
+                return (
+                    <div class={`word-item ${category}`} data-num={part.num} data-category={category} data-word={part.word}>
+                        <div class="word-number">{part.num}</div>
+                        <div class="word-text">{part.word}</div>
+                        <button class="speaker-btn" title="Lyssna (Listen)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-4 0h-2.5l-5 5H0v8h2.5l5 5H10V3.23zm-4 3.2l2.5-2.5v16.15l-2.5-2.5H3v-11.16h3z" opacity=".3"/>
+                                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/>
+                            </svg>
+                        </button>
+                    </div>
+                );
+            })}
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .exercise-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    h1 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        font-size: 2em;
+    }
+
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        margin: 0 auto;
+        background: #f8fafc;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    #linesSvg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .connection-line {
+        stroke: #2d3748;
+        stroke-width: 2;
+        fill: none;
+        opacity: 0.7;
+        vector-effect: non-scaling-stroke;
+        transition: all 0.3s ease;
+    }
+
+    .hotspot {
+        position: absolute;
+        width: 3.5%;
+        height: 3.5%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid var(--primary-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: var(--primary-color);
+        font-size: 14px;
+        z-index: 10;
+    }
+
+    .hotspot.en { border-color: #4fd1c5; color: #319795; }
+    .hotspot.ett { border-color: #f687b3; color: #d53f8c; }
+
+    @media (max-width: 600px) {
+        .hotspot {
+            width: 5%;
+            height: 5%;
+            font-size: 12px;
+            border-width: 1px;
+        }
+    }
+
+    .hotspot:hover, .hotspot.highlight {
+        background: var(--primary-color);
+        color: white;
+        transform: translate(-50%, -50%) scale(1.3);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.6);
+        z-index: 100;
+    }
+
+    .hotspot.en:hover, .hotspot.en.highlight { background: #4fd1c5; border-color: #319795; }
+    .hotspot.ett:hover, .hotspot.ett.highlight { background: #f687b3; border-color: #d53f8c; }
+
+    .hotspot .label {
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #2d3748;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        z-index: 101;
+    }
+
+    .hotspot:hover .label { opacity: 1; }
+
+    .filter-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #718096;
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active { color: white; border-color: transparent; }
+    .filter-btn[data-filter="all"].active { background: var(--primary-color); }
+    .filter-btn[data-filter="en"].active { background: #4fd1c5; }
+    .filter-btn[data-filter="ett"].active { background: #f687b3; }
+
+    .instructions {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        font-style: italic;
+    }
+
+    .word-list {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+    .word-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 14px;
+        background: #f7fafc;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .word-item.en { border-left: 4px solid #4fd1c5; }
+    .word-item.ett { border-left: 4px solid #f687b3; background: #fff5f7; }
+
+    .word-item:hover, .word-item.highlight {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    .word-item.en:hover, .word-item.en.highlight { background: #4fd1c5; }
+    .word-item.ett:hover, .word-item.ett.highlight { background: #f687b3; }
+
+    .word-number {
+        font-weight: bold;
+        margin-right: 10px;
+        min-width: 24px;
+        height: 24px;
+        background: white;
+        color: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .speaker-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-left: auto;
+        padding: 4px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #a0aec0;
+        transition: all 0.2s;
+    }
+
+    .speaker-btn:hover {
+        background-color: rgba(0,0,0,0.05);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .hidden { display: none !important; }
+</style>
+
+<script>
+    const hotspots = document.querySelectorAll('.hotspot');
+    const wordItems = document.querySelectorAll('.word-item');
+    const lines = document.querySelectorAll('.connection-line');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    function highlight(num, isActive) {
+        const wordItem = document.querySelector(`.word-item[data-num="${num}"]`);
+        const hotspot = document.querySelector(`.hotspot[data-num="${num}"]`);
+        const partLines = document.querySelectorAll(`.connection-line[data-num="${num}"]`);
+
+        if (isActive) {
+            wordItem?.classList.add('highlight');
+            hotspot?.classList.add('highlight');
+            partLines.forEach(line => {
+                line.style.opacity = '1';
+                line.style.strokeWidth = '3';
+                line.style.stroke = hotspot?.classList.contains('ett') ? '#f687b3' : (hotspot?.classList.contains('en') ? '#4fd1c5' : '#667eea');
+            });
+        } else {
+            wordItem?.classList.remove('highlight');
+            hotspot?.classList.remove('highlight');
+            partLines.forEach(line => {
+                line.style.opacity = '';
+                line.style.strokeWidth = '';
+                line.style.stroke = '';
+            });
+        }
+    }
+
+    function playPronunciation(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'sv-SE';
+        utterance.rate = 0.8;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    hotspots.forEach(el => {
+        el.addEventListener('mouseenter', () => highlight(el.dataset.num, true));
+        el.addEventListener('mouseleave', () => highlight(el.dataset.num, false));
+        el.addEventListener('click', () => playPronunciation(el.dataset.word));
+    });
+
+    wordItems.forEach(el => {
+        el.addEventListener('mouseenter', () => highlight(el.dataset.num, true));
+        el.addEventListener('mouseleave', () => highlight(el.dataset.num, false));
+        el.addEventListener('click', () => playPronunciation(el.dataset.word));
+    });
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+
+            document.querySelectorAll('.hotspot, .word-item, .connection-line').forEach(el => {
+                if (filter === 'all' || el.dataset.category === filter) {
+                    el.classList.remove('hidden');
+                    if (el.tagName === 'line') el.style.opacity = '0.7';
+                } else {
+                    el.classList.add('hidden');
+                    if (el.tagName === 'line') el.style.opacity = '0';
+                }
+            });
+        });
+    });
+</script>

@@ -13,6 +13,12 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         <Breadcrumbs currentPage="Familjen" />
         <div class="content-split">
             <div class="tree-section" id="treeSection">
+                <div class="view-selector">
+                    <button class="view-btn active" data-view="all">Hela släkten</button>
+                    <button class="view-btn" data-view="core">Kärnfamilj</button>
+                    <button class="view-btn" data-view="paternal">Pappas släkt</button>
+                    <button class="view-btn" data-view="maternal">Mammas släkt</button>
+                </div>
                 <div class="tree-container" id="treeContainer">
                     <svg id="connectionsSvg"></svg>
                     {generations.map(genNum => {
@@ -27,7 +33,7 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                                         const groupMembers = members.filter(m => m.group === groupKey);
                                         groupMembers.forEach(m => processed.add(m.id));
                                         return (
-                                            <div class="group-box" data-group={groupKey}>
+                                            <div class="group-box" data-group={groupKey} data-sv={groups[groupKey].sv}>
                                                 <div class="group-label" title={groups[groupKey].en}>
                                                     {groups[groupKey].sv}
                                                 </div>
@@ -107,9 +113,50 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         background: #f8fafc;
         background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
         background-size: 20px 20px;
-        padding: 20px;
+        padding: 0 20px 20px 20px; /* Removed top padding */
         overflow: auto;
         position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .view-selector {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        padding: 15px 10px; /* Increased padding to cover space */
+        position: sticky;
+        top: 0;
+        background: #f8fafc;
+        z-index: 100;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin: 0 -20px 20px -20px; /* Pull to edges of parent padding */
+    }
+
+    .view-btn {
+        background: white;
+        border: 1px solid #e2e8f0;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .view-btn:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e0;
+    }
+
+    .view-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
     }
 
     #connectionsSvg {
@@ -146,11 +193,11 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
     }
 
     .group-box {
+        display: none;
         border: 2px dashed #f59e0b;
         border-radius: 12px;
         padding: 10px;
         padding-top: 22px;
-        display: flex;
         gap: 10px;
         position: relative;
         background: rgba(255, 255, 255, 0.4);
@@ -184,6 +231,29 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         position: relative;
         width: 85px;
         z-index: 2;
+        display: none; /* Hidden by default, shown via script */
+    }
+
+    .person-node.visible {
+        display: flex;
+    }
+
+    .group-box.visible {
+        display: flex;
+    }
+
+    .group-box.no-box {
+        border: none;
+        background: none;
+        padding-top: 24px; /* Matches .generation > .person-node margin-top */
+        padding-bottom: 0;
+        padding-left: 0;
+        padding-right: 0;
+        box-shadow: none;
+    }
+
+    .group-box.no-box .group-label {
+        display: none;
     }
 
     .generation > .person-node { margin-top: 24px; }
@@ -200,6 +270,17 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         color: white;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         border: 3px solid white;
+    }
+
+    .person-node.active .avatar,
+    .group-box.active {
+        box-shadow: 0 0 0 4px #f59e0b !important;
+        transition: box-shadow 0.2s;
+    }
+
+    .group-box.active {
+        border-style: solid;
+        border-color: #f59e0b;
     }
 
     .male .avatar { background: #4fd1c5; }
@@ -303,9 +384,50 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
     const svg = document.getElementById('connectionsSvg');
     const resetBtn = document.getElementById('resetZoom');
     const treeSection = document.getElementById('treeSection');
+    const viewButtons = document.querySelectorAll('.view-btn');
+
+    const views = {
+        all: familyData.map(p => p.id),
+        core: ['pappa', 'mamma', 'bror', 'syster', 'son', 'dotter'],
+        paternal: ['farfar', 'farmor', 'pappa', 'farbror', 'faster', 'kusin_p'],
+        maternal: ['morfar', 'mormor', 'mamma', 'morbror', 'moster', 'kusin_m']
+    };
 
     let currentScale = 1;
     let isZoomed = false;
+    let activeView = 'all';
+
+    function updateVisibility() {
+        const visibleIds = views[activeView];
+        
+        // Update nodes
+        document.querySelectorAll('.person-node').forEach(node => {
+            const id = node.dataset.id;
+            const isVisible = visibleIds.includes(id);
+            node.classList.toggle('visible', isVisible);
+        });
+
+        // Update groups
+        document.querySelectorAll('.group-box').forEach(group => {
+            const visibleMembers = Array.from(group.querySelectorAll('.person-node'))
+                .filter(node => visibleIds.includes(node.dataset.id));
+            
+            const isForaldrar = group.dataset.group === 'foraldrar';
+            const shouldShowDecorations = visibleMembers.length > (isForaldrar ? 1 : 0);
+            
+            group.classList.toggle('visible', visibleMembers.length > 0);
+            group.classList.toggle('no-box', !shouldShowDecorations);
+        });
+
+        // Update word list
+        document.querySelectorAll('.word-item').forEach(item => {
+            const id = item.dataset.id;
+            item.style.display = visibleIds.includes(id) ? 'flex' : 'none';
+        });
+
+        drawConnections();
+        if (window.innerWidth <= 600) fitTree();
+    }
 
     function playPronunciation(text) {
         if (!('speechSynthesis' in window)) return;
@@ -343,7 +465,7 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                     if (drawnPartners.has(pairId)) return;
                     const n1 = nodeElements[p.id];
                     const n2 = nodeElements[pid];
-                    if (n1 && n2) {
+                    if (n1 && n2 && n1.classList.contains('visible') && n2.classList.contains('visible')) {
                         const p1 = getCenter(n1, containerRect);
                         const p2 = getCenter(n2, containerRect);
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -367,18 +489,23 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                 let px = 0, py = 0, count = 0, maxBottom = 0;
                 child.parents.forEach(pid => {
                     const pNode = nodeElements[pid];
-                    if (pNode) {
+                    if (pNode && pNode.classList.contains('visible')) {
                         const pos = getCenter(pNode, containerRect);
                         px += pos.x; py += pos.y; count++;
-                        const container = pNode.closest('.group-box') || pNode;
+                        
+                        const groupBox = pNode.closest('.group-box');
+                        const container = (groupBox && groupBox.classList.contains('visible')) ? groupBox : pNode;
                         const b = (container.getBoundingClientRect().bottom - containerRect.top) / currentScale;
                         if (b > maxBottom) maxBottom = b;
                     }
                 });
 
-                if (count > 0) {
+                if (count > 0 && cNode.classList.contains('visible')) {
                     const start = { x: px / count, y: py / count };
-                    const childTop = (cNode.closest('.group-box') || cNode).getBoundingClientRect().top - containerRect.top / currentScale;
+                    
+                    // Always use the node's top for vertical alignment of the "elbow"
+                    // rather than the potentially differing container tops
+                    const childTop = (cNode.getBoundingClientRect().top - containerRect.top) / currentScale;
                     const midY = (maxBottom + childTop) / 2 || (start.y + childPos.y) / 2;
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     path.setAttribute('d', `M ${start.x} ${start.y} L ${start.x} ${midY} L ${childPos.x} ${midY} L ${childPos.x} ${childPos.y}`);
@@ -410,19 +537,19 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
     }
 
     function highlight(id) {
-        document.querySelectorAll('.word-item, .person-node').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.word-item, .person-node, .group-box').forEach(el => el.classList.remove('active'));
         const li = document.querySelector(`.word-item[data-id="${id}"]`);
         const node = document.querySelector(`.person-node[data-id="${id}"]`);
-        li?.classList.add('active');
-        node?.classList.add('active');
-        if (node) {
-            node.style.transform = 'scale(1.2) translateY(-5px)';
-            node.style.zIndex = '100';
-        }
+        
+        setTimeout(() => {
+            li?.classList.add('active');
+            node?.classList.add('active');
+        }, 10);
     }
 
     document.querySelectorAll('.person-node, .word-item').forEach(el => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering group-box audio
             const id = el.dataset.id;
             playPronunciation(el.dataset.sv);
             highlight(id);
@@ -437,13 +564,29 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         });
     });
 
+    document.querySelectorAll('.group-box').forEach(box => {
+        box.addEventListener('click', (e) => {
+            document.querySelectorAll('.word-item, .person-node, .group-box').forEach(el => el.classList.remove('active'));
+            playPronunciation(box.dataset.sv);
+            setTimeout(() => box.classList.add('active'), 10);
+        });
+    });
+
     window.addEventListener('load', () => {
-        drawConnections();
-        if (window.innerWidth <= 600) fitTree();
+        updateVisibility();
     });
     window.addEventListener('resize', () => {
         drawConnections();
         if (!isZoomed && window.innerWidth <= 600) fitTree();
+    });
+
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            viewButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeView = btn.dataset.view;
+            updateVisibility();
+        });
     });
 
     resetBtn.addEventListener('click', resetZoom);

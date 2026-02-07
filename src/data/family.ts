@@ -21,7 +21,7 @@ export const familyData: Person[] = [
     { id: 'farbror', sv: 'Farbror', en: "Uncle (Dad's brother)", type: 'male', gen: 2, parents: ['farfar', 'farmor'], avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Farbror&mouth=smile&eyes=happy&top=shortFlat&hairColor=2c1b18&accessoriesProbability=0' },
     { id: 'faster', sv: 'Faster', en: "Aunt (Dad's sister)", type: 'female', gen: 2, parents: ['farfar', 'farmor'], group: 'farforaldrar_extra', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Faster&mouth=smile&eyes=happy&top=straight01&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
     { id: 'pappa', sv: 'Pappa', en: "Dad", type: 'male', gen: 2, parents: ['farfar', 'farmor'], partners: ['mamma'], group: 'foraldrar', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Pappa&mouth=smile&eyes=happy&top=shortFlat&hairColor=2c1b18&accessoriesProbability=0' },
-    { id: 'mamma', sv: 'Mamma', en: 'Mom', type: 'female', gen: 2, partners: ['pappa'], group: 'foraldrar', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Mamma&mouth=smile&eyes=happy&top=straight01&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
+    { id: 'mamma', sv: 'Mamma', en: 'Mom', type: 'female', gen: 2, parents: ['morfar', 'mormor'], partners: ['pappa'], group: 'foraldrar', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Mamma&mouth=smile&eyes=happy&top=straight01&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
     { id: 'morbror', sv: 'Morbror', en: "Uncle (Mom's brother)", type: 'male', gen: 2, parents: ['morfar', 'mormor'], avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Morbror&mouth=smile&eyes=happy&top=shortFlat&hairColor=2c1b18&accessoriesProbability=0' },
     { id: 'moster', sv: 'Moster', en: "Aunt (Mom's sister)", type: 'female', gen: 2, parents: ['morfar', 'mormor'], group: 'morforaldrar_extra', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Moster&mouth=smile&eyes=happy&top=straight01&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
 
@@ -32,8 +32,8 @@ export const familyData: Person[] = [
     { id: 'kusin_m', sv: 'Kusin', en: "Cousin (Mom's side)", type: 'female', gen: 3, parents: ['moster'], avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=CousinM&mouth=smile&eyes=happy&top=curvy&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
 
     // Generation 4 (Barnbarn)
-    { id: 'son', sv: 'Son', en: "Son (Barnbarn)", type: 'male', gen: 4, parents: ['bror', 'syster'], group: 'barnbarn', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Son&mouth=smile&eyes=happy&top=shortRound&hairColor=2c1b18&accessoriesProbability=0&facialHairProbability=0' },
-    { id: 'dotter', sv: 'Dotter', en: 'Daughter', type: 'female', gen: 4, parents: ['bror', 'syster'], group: 'barnbarn', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Daughter&mouth=smile&eyes=happy&top=straight02&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
+    { id: 'son', sv: 'Son', en: "Son (Barnbarn)", type: 'male', gen: 4, parents: ['bror'], group: 'barnbarn', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Son&mouth=smile&eyes=happy&top=shortRound&hairColor=2c1b18&accessoriesProbability=0&facialHairProbability=0' },
+    { id: 'dotter', sv: 'Dotter', en: 'Daughter', type: 'female', gen: 4, parents: ['bror'], group: 'barnbarn', avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Daughter&mouth=smile&eyes=happy&top=straight02&hairColor=4a312c&accessoriesProbability=0&eyebrows=defaultNatural&facialHairProbability=0' },
 ];
 
 export const groups: Record<string, { sv: string, en: string }> = {

@@ -33,7 +33,7 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                                         const groupMembers = members.filter(m => m.group === groupKey);
                                         groupMembers.forEach(m => processed.add(m.id));
                                         return (
-                                            <div class="group-box" data-group={groupKey}>
+                                            <div class="group-box" data-group={groupKey} data-sv={groups[groupKey].sv}>
                                                 <div class="group-label" title={groups[groupKey].en}>
                                                     {groups[groupKey].sv}
                                                 </div>
@@ -538,7 +538,8 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
     }
 
     document.querySelectorAll('.person-node, .word-item').forEach(el => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent triggering group-box audio
             const id = el.dataset.id;
             playPronunciation(el.dataset.sv);
             highlight(id);
@@ -550,6 +551,12 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                     setTimeout(() => node.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
                 }
             }
+        });
+    });
+
+    document.querySelectorAll('.group-box').forEach(box => {
+        box.addEventListener('click', (e) => {
+            playPronunciation(box.dataset.sv);
         });
     });
 

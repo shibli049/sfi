@@ -27,13 +27,12 @@ export const familyData: Person[] = [
     // Generation 3
     { id: 'kusin_p', sv: 'Kusin', en: "Cousin (Paternal)", type: 'male', gen: 3, parents: ['farbror'] },
     { id: 'bror', sv: 'Bror', en: "Brother", type: 'male', gen: 3, parents: ['pappa', 'mamma'], group: 'syskon' },
-    { id: 'jag', sv: 'Jag', en: "Me", type: 'me', gen: 3, parents: ['pappa', 'mamma'], group: 'syskon' },
     { id: 'syster', sv: 'Syster', en: "Sister", type: 'female', gen: 3, parents: ['pappa', 'mamma'], group: 'syskon' },
     { id: 'kusin_m', sv: 'Kusin', en: "Cousin (Maternal)", type: 'female', gen: 3, parents: ['moster'] },
 
     // Generation 4 (Barnbarn)
-    { id: 'son', sv: 'Son', en: "Son (Barnbarn)", type: 'male', gen: 4, parents: ['jag'], group: 'barnbarn' },
-    { id: 'dotter', sv: 'Dotter', en: "Daughter (Barnbarn)", type: 'female', gen: 4, parents: ['jag'], group: 'barnbarn' },
+    { id: 'son', sv: 'Son', en: "Son (Barnbarn)", type: 'male', gen: 4, parents: ['bror'], group: 'barnbarn' },
+    { id: 'dotter', sv: 'Dotter', en: "Daughter (Barnbarn)", type: 'female', gen: 4, parents: ['bror'], group: 'barnbarn' },
 ];
 
 export const groups: Record<string, { sv: string, en: string }> = {

@@ -113,7 +113,7 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         background: #f8fafc;
         background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
         background-size: 20px 20px;
-        padding: 20px;
+        padding: 0 20px 20px 20px; /* Removed top padding */
         overflow: auto;
         position: relative;
         display: flex;
@@ -124,14 +124,14 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         display: flex;
         gap: 10px;
         justify-content: center;
-        padding: 10px;
+        padding: 15px 10px; /* Increased padding to cover space */
         position: sticky;
         top: 0;
-        background: rgba(248, 250, 252, 0.9);
-        backdrop-filter: blur(4px);
+        background: #f8fafc;
         z-index: 100;
         border-bottom: 1px solid #e2e8f0;
-        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin: 0 -20px 20px -20px; /* Pull to edges of parent padding */
     }
 
     .view-btn {

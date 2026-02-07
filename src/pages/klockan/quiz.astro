@@ -8,7 +8,11 @@ const title = "Klockan Quiz - Practice Swedish Time";
 <Layout title={title}>
     <div class="exercise-container">
         <Breadcrumbs currentPage="Klockan Quiz" />
-        <h1>🎯 Klockan Quiz</h1>
+        
+        <div class="header-with-back">
+            <a href="/sfi/klockan" class="back-btn">← Back to Learning</a>
+            <h1>🎯 Klockan Quiz</h1>
+        </div>
         
         <div class="quiz-intro">
             <p>Test your knowledge of Swedish time expressions! Choose a difficulty level to begin.</p>
@@ -172,6 +176,30 @@ const title = "Klockan Quiz - Practice Swedish Time";
         color: var(--primary-color);
         margin-bottom: 20px;
         font-size: 2.5em;
+    }
+
+    .header-with-back {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 10px 20px;
+        background: #e2e8f0;
+        color: #2d3748;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        margin-bottom: 15px;
+    }
+
+    .back-btn:hover {
+        background: #cbd5e0;
+        transform: translateX(-3px);
     }
 
     h2 {

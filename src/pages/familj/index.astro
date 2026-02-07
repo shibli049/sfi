@@ -39,7 +39,9 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                                                 </div>
                                                 {groupMembers.map(m => (
                                                     <div class={`person-node ${m.type}`} data-id={m.id} data-sv={m.sv}>
-                                                        <div class="avatar">{m.sv.substring(0, 2).toUpperCase()}</div>
+                                                        <div class="avatar">
+                                                            {m.avatar ? <img src={m.avatar} alt={m.sv} /> : m.sv.substring(0, 2).toUpperCase()}
+                                                        </div>
                                                         <span class="name-label">{m.sv}</span>
                                                         <span class="eng-label">{m.en}</span>
                                                     </div>
@@ -50,7 +52,9 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
                                         processed.add(person.id);
                                         return (
                                             <div class={`person-node ${person.type}`} data-id={person.id} data-sv={person.sv}>
-                                                <div class="avatar">{person.sv.substring(0, 2).toUpperCase()}</div>
+                                                <div class="avatar">
+                                                    {person.avatar ? <img src={person.avatar} alt={person.sv} /> : person.sv.substring(0, 2).toUpperCase()}
+                                                </div>
                                                 <span class="name-label">{person.sv}</span>
                                                 <span class="eng-label">{person.en}</span>
                                             </div>
@@ -270,6 +274,14 @@ const getGenMembers = (gen: number) => familyData.filter(p => p.gen === gen);
         color: white;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         border: 3px solid white;
+        overflow: hidden;
+        background: #f1f5f9;
+    }
+
+    .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     .person-node.active .avatar,

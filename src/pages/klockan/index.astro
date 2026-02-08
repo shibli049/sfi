@@ -80,7 +80,6 @@ const title = "Klockan - Swedish Clock System";
                 <div class="clock-controls">
                     <div class="time-display">
                         <div class="digital-time" id="digitalTime">12:00</div>
-                        <div class="written-time" id="writtenTime">klockan tolv</div>
                         <div class="swedish-time" id="swedishTime">klockan tolv</div>
                         <div class="english-time" id="englishTime">twelve o'clock</div>
                         <div class="explanation-text" id="explanationText">Exact hour</div>
@@ -89,11 +88,16 @@ const title = "Klockan - Swedish Clock System";
                     <div class="slider-controls">
                         <div class="slider-group">
                             <label for="hourSlider">Timme (Hour): <span id="hourValue">12</span></label>
-                            <input type="range" id="hourSlider" min="1" max="12" value="12" step="1">
+                            <div class="slider-with-buttons">
+                                <button class="increment-btn" id="subHourBtn" title="Subtract 1 hour">-1</button>
+                                <input type="range" id="hourSlider" min="1" max="12" value="12" step="1">
+                                <button class="increment-btn" id="addHourBtn" title="Add 1 hour">+1</button>
+                            </div>
                         </div>
                         <div class="slider-group">
                             <label for="minuteSlider">Minut (Minute): <span id="minuteValue">0</span></label>
                             <div class="slider-with-buttons">
+                                <button class="increment-btn" id="subFiveBtn" title="Subtract 5 minutes">-5</button>
                                 <input type="range" id="minuteSlider" min="0" max="59" value="0" step="1">
                                 <button class="increment-btn" id="addFiveBtn" title="Add 5 minutes">+5</button>
                             </div>
@@ -523,7 +527,6 @@ const title = "Klockan - Swedish Clock System";
     const hourValue = document.getElementById('hourValue');
     const minuteValue = document.getElementById('minuteValue');
     const digitalTime = document.getElementById('digitalTime');
-    const writtenTime = document.getElementById('writtenTime');
     const swedishTime = document.getElementById('swedishTime');
     const englishTime = document.getElementById('englishTime');
     const explanationText = document.getElementById('explanationText');
@@ -531,6 +534,9 @@ const title = "Klockan - Swedish Clock System";
     const minuteHand = document.getElementById('minuteHand');
     const speakBtn = document.getElementById('speakBtn');
     const addFiveBtn = document.getElementById('addFiveBtn');
+    const subFiveBtn = document.getElementById('subFiveBtn');
+    const addHourBtn = document.getElementById('addHourBtn');
+    const subHourBtn = document.getElementById('subHourBtn');
 
     function updateClock() {
         const hour = parseInt(hourSlider.value);
@@ -540,7 +546,6 @@ const title = "Klockan - Swedish Clock System";
         hourValue!.textContent = hour.toString();
         minuteValue!.textContent = minute.toString();
         digitalTime!.textContent = `${hour}:${minute.toString().padStart(2, '0')}`;
-        writtenTime!.textContent = getWrittenSwedishTime(hour, minute);
         
         // Update clock hands
         const minuteAngle = (minute * 6 - 90) * Math.PI / 180;
@@ -596,6 +601,28 @@ const title = "Klockan - Swedish Clock System";
         updateClock();
     });
 
+    subFiveBtn?.addEventListener('click', () => {
+        const currentMinute = parseInt(minuteSlider.value);
+        const newMinute = (currentMinute - 5 + 60) % 60;
+        minuteSlider.value = newMinute.toString();
+        updateClock();
+    });
+
+    addHourBtn?.addEventListener('click', () => {
+        let currentHour = parseInt(hourSlider.value);
+        currentHour = (currentHour % 12) + 1;
+        hourSlider.value = currentHour.toString();
+        updateClock();
+    });
+
+    subHourBtn?.addEventListener('click', () => {
+        let currentHour = parseInt(hourSlider.value);
+        currentHour = currentHour - 1;
+        if (currentHour < 1) currentHour = 12;
+        hourSlider.value = currentHour.toString();
+        updateClock();
+    });
+
     // Add speak functionality to example cards
     document.querySelectorAll('.example-speak-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -604,7 +631,12 @@ const title = "Klockan - Swedish Clock System";
         });
     });
 
-    // Initialize
+    // Initialize with random time
+    const randomHour = Math.floor(Math.random() * 12) + 1;
+    const randomMinute = Math.floor(Math.random() * 12) * 5; // Random 5-minute increment
+    hourSlider.value = randomHour.toString();
+    minuteSlider.value = randomMinute.toString();
+
     updateClock();
 </script>
 

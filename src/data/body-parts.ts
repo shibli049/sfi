@@ -194,8 +194,8 @@ export const bodyPartsData: BodyPart[] = [
                 "y": 324
             },
             {
-                "x": 777,
-                "y": 315
+                "x": 790,
+                "y": 325
             }
         ]
     },
@@ -254,8 +254,8 @@ export const bodyPartsData: BodyPart[] = [
                 "y": 377
             },
             {
-                "x": 806,
-                "y": 393
+                "x": 816,
+                "y": 394
             }
         ]
     },
@@ -282,8 +282,8 @@ export const bodyPartsData: BodyPart[] = [
         "y": 535,
         "anchors": [
             {
-                "x": 894,
-                "y": 575
+                "x": 902,
+                "y": 572
             }
         ]
     },
@@ -294,8 +294,8 @@ export const bodyPartsData: BodyPart[] = [
         "y": 651,
         "anchors": [
             {
-                "x": 866,
-                "y": 628
+                "x": 884,
+                "y": 629
             }
         ]
     },
@@ -306,8 +306,8 @@ export const bodyPartsData: BodyPart[] = [
         "y": 712,
         "anchors": [
             {
-                "x": 852,
-                "y": 721
+                "x": 865,
+                "y": 720
             }
         ]
     },

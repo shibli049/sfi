@@ -1,0 +1,643 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { clockExplanations } from '../../data/clock';
+
+const title = "Klockan - Swedish Clock System";
+---
+
+<Layout title={title}>
+    <div class="exercise-container">
+        <Breadcrumbs currentPage="Klockan" />
+        <h1>🕐 Klockan - Swedish Clock System</h1>
+        
+        <div class="intro-section">
+            <p class="intro-text">
+                Learn how to tell time in Swedish! The Swedish clock system has some unique features, 
+                especially the "halv" (half) which refers to the <strong>next</strong> hour, not the current one.
+            </p>
+        </div>
+
+        <div class="navigation-buttons">
+            <a href="#explanation" class="nav-btn primary">📚 Learn the System</a>
+            <a href="/sfi/klockan/quiz" class="nav-btn secondary">🎯 Practice Quiz</a>
+        </div>
+
+        <div id="explanation" class="explanation-section">
+            <h2>Interactive Clock</h2>
+            
+            <div class="clock-container">
+                <svg class="clock-face" viewBox="0 0 400 400" id="clockSvg">
+                    <!-- Clock circle -->
+                    <circle cx="200" cy="200" r="180" fill="#f8fafc" stroke="#2d3748" stroke-width="4"/>
+                    
+                    <!-- Hour markers -->
+                    {Array.from({ length: 12 }, (_, i) => {
+                        const angle = (i * 30 - 90) * Math.PI / 180;
+                        const x1 = 200 + 160 * Math.cos(angle);
+                        const y1 = 200 + 160 * Math.sin(angle);
+                        const x2 = 200 + 170 * Math.cos(angle);
+                        const y2 = 200 + 170 * Math.sin(angle);
+                        return (
+                            <line 
+                                x1={x1} y1={y1} x2={x2} y2={y2} 
+                                stroke="#2d3748" stroke-width="3"
+                            />
+                        );
+                    })}
+                    
+                    <!-- Hour numbers -->
+                    {Array.from({ length: 12 }, (_, i) => {
+                        const hour = i === 0 ? 12 : i;
+                        const angle = (i * 30 - 90) * Math.PI / 180;
+                        const x = 200 + 135 * Math.cos(angle);
+                        const y = 200 + 135 * Math.sin(angle);
+                        return (
+                            <text 
+                                x={x} y={y} 
+                                text-anchor="middle" 
+                                dominant-baseline="middle"
+                                class="hour-number"
+                                font-size="24"
+                                font-weight="bold"
+                                fill="#2d3748"
+                            >
+                                {hour}
+                            </text>
+                        );
+                    })}
+                    
+                    <!-- Clock hands -->
+                    <line id="hourHand" x1="200" y1="200" x2="200" y2="110" 
+                          stroke="#667eea" stroke-width="8" stroke-linecap="round"/>
+                    <line id="minuteHand" x1="200" y1="200" x2="200" y2="70" 
+                          stroke="#4fd1c5" stroke-width="6" stroke-linecap="round"/>
+                    
+                    <!-- Center dot -->
+                    <circle cx="200" cy="200" r="12" fill="#2d3748"/>
+                </svg>
+                
+                <div class="clock-controls">
+                    <div class="time-display">
+                        <div class="digital-time" id="digitalTime">12:00</div>
+                        <div class="swedish-time" id="swedishTime">klockan tolv</div>
+                        <div class="english-time" id="englishTime">twelve o'clock</div>
+                        <div class="explanation-text" id="explanationText">Exact hour</div>
+                    </div>
+                    
+                    <div class="slider-controls">
+                        <div class="slider-group">
+                            <label for="hourSlider">Timme (Hour): <span id="hourValue">12</span></label>
+                            <div class="slider-with-buttons">
+                                <button class="increment-btn" id="subHourBtn" title="Subtract 1 hour">-1</button>
+                                <input type="range" id="hourSlider" min="1" max="12" value="12" step="1">
+                                <button class="increment-btn" id="addHourBtn" title="Add 1 hour">+1</button>
+                            </div>
+                        </div>
+                        <div class="slider-group">
+                            <label for="minuteSlider">Minut (Minute): <span id="minuteValue">0</span></label>
+                            <div class="slider-with-buttons">
+                                <button class="increment-btn" id="subFiveBtn" title="Subtract 5 minutes">-5</button>
+                                <input type="range" id="minuteSlider" min="0" max="59" value="0" step="1">
+                                <button class="increment-btn" id="addFiveBtn" title="Add 5 minutes">+5</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="speak-btn" id="speakBtn">
+                        🔊 Lyssna (Listen)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="rules-section">
+            <h2>📖 Swedish Clock Rules</h2>
+            
+            {clockExplanations.map((section, index) => (
+                <div class="rule-card" data-category={index}>
+                    <div class="rule-header">
+                        <h3>{section.title}</h3>
+                        <p class="rule-description">{section.description}</p>
+                        {section.warning && (
+                            <div class="warning-box">
+                                {section.warning}
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div class="examples-grid">
+                        {section.examples.map(example => (
+                            <div class="example-card">
+                                <div class="example-time">{example.time}</div>
+                                <div class="example-swedish">{example.swedish}</div>
+                                <div class="example-english">{example.english}</div>
+                                <button class="example-speak-btn" data-text={example.swedish}>
+                                    🔊
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        <div class="cta-section">
+            <h2>Ready to Practice?</h2>
+            <a href="/sfi/klockan/quiz" class="cta-button">
+                Start Quiz 🎯
+            </a>
+        </div>
+    </div>
+</Layout>
+
+<style>
+    .exercise-container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        max-width: 1000px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    h1 {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        font-size: 2.5em;
+    }
+
+    h2 {
+        color: var(--primary-color);
+        margin: 30px 0 20px;
+        font-size: 1.8em;
+    }
+
+    .intro-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+
+    .intro-text {
+        font-size: 1.1em;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .navigation-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+    }
+
+    .nav-btn {
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1em;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .nav-btn.primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .nav-btn.secondary {
+        background: #4fd1c5;
+        color: white;
+    }
+
+    .nav-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .clock-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin: 30px 0;
+        align-items: center;
+    }
+
+    @media (max-width: 768px) {
+        .clock-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .clock-face {
+        max-width: 400px;
+        width: 100%;
+        height: auto;
+        margin: 0 auto;
+        filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.1));
+    }
+
+    .clock-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .time-display {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    .digital-time {
+        font-size: 3em;
+        font-weight: bold;
+        color: var(--primary-color);
+        font-family: 'Courier New', monospace;
+    }
+
+    .written-time {
+        font-size: 1.3em;
+        font-weight: 600;
+        color: #4fd1c5;
+        font-style: italic;
+        margin: 5px 0;
+        padding: 5px 15px;
+        background: rgba(79, 209, 197, 0.1);
+        border-radius: 8px;
+        display: inline-block;
+    }
+
+    .swedish-time {
+        font-size: 1.8em;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 10px 0;
+    }
+
+    .english-time {
+        font-size: 1.2em;
+        color: #718096;
+        font-style: italic;
+    }
+
+    .explanation-text {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: #667eea;
+        color: white;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 0.9em;
+    }
+
+    .slider-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .slider-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .slider-group label {
+        font-weight: 600;
+        color: #2d3748;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .slider-with-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .slider-with-buttons input[type="range"] {
+        flex: 1;
+    }
+
+    .increment-btn {
+        padding: 8px 16px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1em;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        min-width: 50px;
+    }
+
+    .increment-btn:hover {
+        background: #5568d3;
+        transform: scale(1.05);
+    }
+
+    .increment-btn:active {
+        transform: scale(0.95);
+    }
+
+    input[type="range"] {
+        width: 100%;
+        height: 8px;
+        border-radius: 5px;
+        background: #e2e8f0;
+        outline: none;
+        -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+
+    .speak-btn {
+        padding: 15px 30px;
+        background: #4fd1c5;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .speak-btn:hover {
+        background: #38b2ac;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(79, 209, 197, 0.4);
+    }
+
+    .rules-section {
+        margin-top: 50px;
+    }
+
+    .rule-card {
+        background: #f8fafc;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border-left: 5px solid var(--primary-color);
+    }
+
+    .rule-header h3 {
+        color: var(--primary-color);
+        margin: 0 0 10px 0;
+        font-size: 1.5em;
+    }
+
+    .rule-description {
+        color: #4a5568;
+        font-size: 1.1em;
+        margin: 0 0 15px 0;
+    }
+
+    .warning-box {
+        background: #fff5f5;
+        border: 2px solid #fc8181;
+        color: #c53030;
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    .examples-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .example-card {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .example-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .example-time {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: var(--primary-color);
+        font-family: 'Courier New', monospace;
+    }
+
+    .example-swedish {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 8px 0;
+    }
+
+    .example-english {
+        font-size: 0.9em;
+        color: #718096;
+        font-style: italic;
+    }
+
+    .example-speak-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 1.2em;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: all 0.2s;
+    }
+
+    .example-speak-btn:hover {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+
+    .cta-section {
+        text-align: center;
+        margin-top: 50px;
+        padding: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        color: white;
+    }
+
+    .cta-section h2 {
+        color: white;
+        margin-top: 0;
+    }
+
+    .cta-button {
+        display: inline-block;
+        padding: 18px 40px;
+        background: white;
+        color: var(--primary-color);
+        text-decoration: none;
+        border-radius: 12px;
+        font-size: 1.3em;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+
+    .cta-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+</style>
+
+<script>
+    import { clockTimes, getWrittenSwedishTime } from '../../data/clock';
+
+    const hourSlider = document.getElementById('hourSlider') as HTMLInputElement;
+    const minuteSlider = document.getElementById('minuteSlider') as HTMLInputElement;
+    const hourValue = document.getElementById('hourValue');
+    const minuteValue = document.getElementById('minuteValue');
+    const digitalTime = document.getElementById('digitalTime');
+    const swedishTime = document.getElementById('swedishTime');
+    const englishTime = document.getElementById('englishTime');
+    const explanationText = document.getElementById('explanationText');
+    const hourHand = document.getElementById('hourHand');
+    const minuteHand = document.getElementById('minuteHand');
+    const speakBtn = document.getElementById('speakBtn');
+    const addFiveBtn = document.getElementById('addFiveBtn');
+    const subFiveBtn = document.getElementById('subFiveBtn');
+    const addHourBtn = document.getElementById('addHourBtn');
+    const subHourBtn = document.getElementById('subHourBtn');
+
+    function updateClock() {
+        const hour = parseInt(hourSlider.value);
+        const minute = parseInt(minuteSlider.value);
+        
+        // Update display values
+        hourValue!.textContent = hour.toString();
+        minuteValue!.textContent = minute.toString();
+        digitalTime!.textContent = `${hour}:${minute.toString().padStart(2, '0')}`;
+        
+        // Update clock hands
+        const minuteAngle = (minute * 6 - 90) * Math.PI / 180;
+        const hourAngle = ((hour % 12 + minute / 60) * 30 - 90) * Math.PI / 180;
+        
+        const minuteX = 200 + 130 * Math.cos(minuteAngle);
+        const minuteY = 200 + 130 * Math.sin(minuteAngle);
+        const hourX = 200 + 90 * Math.cos(hourAngle);
+        const hourY = 200 + 90 * Math.sin(hourAngle);
+        
+        minuteHand!.setAttribute('x2', minuteX.toString());
+        minuteHand!.setAttribute('y2', minuteY.toString());
+        hourHand!.setAttribute('x2', hourX.toString());
+        hourHand!.setAttribute('y2', hourY.toString());
+        
+        // Find matching time expression for English and explanation
+        const matchingTime = clockTimes.find(t => t.hour === hour && t.minute === minute);
+        
+        // Always show Swedish time using the function
+        swedishTime!.textContent = getWrittenSwedishTime(hour, minute);
+        
+        if (matchingTime) {
+            englishTime!.textContent = matchingTime.english;
+            explanationText!.textContent = matchingTime.explanation;
+        } else {
+            // For times not in the dataset, provide generic info
+            englishTime!.textContent = 'Custom time';
+            explanationText!.textContent = 'Use the sliders to explore Swedish time expressions';
+        }
+    }
+
+    function speak(text: string) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'sv-SE';
+        utterance.rate = 0.8;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    hourSlider.addEventListener('input', updateClock);
+    minuteSlider.addEventListener('input', updateClock);
+    speakBtn?.addEventListener('click', () => {
+        const hour = parseInt(hourSlider.value);
+        const minute = parseInt(minuteSlider.value);
+        speak(getWrittenSwedishTime(hour, minute));
+    });
+
+    addFiveBtn?.addEventListener('click', () => {
+        const currentMinute = parseInt(minuteSlider.value);
+        const newMinute = (currentMinute + 5) % 60;
+        minuteSlider.value = newMinute.toString();
+        updateClock();
+    });
+
+    subFiveBtn?.addEventListener('click', () => {
+        const currentMinute = parseInt(minuteSlider.value);
+        const newMinute = (currentMinute - 5 + 60) % 60;
+        minuteSlider.value = newMinute.toString();
+        updateClock();
+    });
+
+    addHourBtn?.addEventListener('click', () => {
+        let currentHour = parseInt(hourSlider.value);
+        currentHour = (currentHour % 12) + 1;
+        hourSlider.value = currentHour.toString();
+        updateClock();
+    });
+
+    subHourBtn?.addEventListener('click', () => {
+        let currentHour = parseInt(hourSlider.value);
+        currentHour = currentHour - 1;
+        if (currentHour < 1) currentHour = 12;
+        hourSlider.value = currentHour.toString();
+        updateClock();
+    });
+
+    // Add speak functionality to example cards
+    document.querySelectorAll('.example-speak-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const text = btn.getAttribute('data-text');
+            if (text) speak(text);
+        });
+    });
+
+    // Initialize with random time
+    const randomHour = Math.floor(Math.random() * 12) + 1;
+    const randomMinute = Math.floor(Math.random() * 12) * 5; // Random 5-minute increment
+    hourSlider.value = randomHour.toString();
+    minuteSlider.value = randomMinute.toString();
+
+    updateClock();
+</script>
+
+</Layout>

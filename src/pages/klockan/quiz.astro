@@ -46,13 +46,19 @@ const title = "Klockan Quiz - Practice Swedish Time";
 
         <div class="quiz-container hidden" id="quizContainer">
             <div class="quiz-header">
-                <div class="score-display">
-                    <span class="score-label">Score:</span>
-                    <span class="score-value" id="scoreValue">0/0</span>
-                </div>
-                <div class="streak-display">
-                    <span class="streak-label">🔥 Streak:</span>
-                    <span class="streak-value" id="streakValue">0</span>
+                <div class="progress-info">
+                    <div class="score-display">
+                        <span class="score-label">Score:</span>
+                        <span class="score-value" id="scoreValue">0/0</span>
+                    </div>
+                    <div class="progress-display">
+                        <span class="progress-label">Progress:</span>
+                        <span class="progress-value" id="progressValue">0/0</span>
+                    </div>
+                    <div class="streak-display">
+                        <span class="streak-label">🔥 Streak:</span>
+                        <span class="streak-value" id="streakValue">0</span>
+                    </div>
                 </div>
                 <button class="quit-btn" id="quitBtn">Exit Quiz</button>
             </div>
@@ -277,12 +283,27 @@ const title = "Klockan Quiz - Practice Swedish Time";
         gap: 15px;
     }
 
-    .score-display, .streak-display {
+    .progress-info {
+        display: flex;
+        gap: 25px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .score-display, .streak-display, .progress-display {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 1.2em;
+        font-size: 1.1em;
         font-weight: 600;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 15px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .score-label, .streak-label, .progress-label {
+        opacity: 0.9;
     }
 
     .quit-btn {
@@ -361,46 +382,67 @@ const title = "Klockan Quiz - Practice Swedish Time";
     }
 
     .answer-btn {
-        background: white;
-        border: 3px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        font-size: 1.1em;
+        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px 20px;
+        font-size: 1.15em;
         font-weight: 600;
         color: #2d3748;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .answer-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+        transition: left 0.5s;
+    }
+
+    .answer-btn:hover:not(.correct):not(.incorrect):not(:disabled)::before {
+        left: 100%;
     }
 
     .answer-btn:hover:not(.correct):not(.incorrect):not(:disabled) {
         border-color: var(--primary-color);
-        background: #f7fafc;
-        transform: translateY(-2px);
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
     }
 
     .answer-btn.correct {
-        background: #48bb78;
-        border-color: #38a169;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        border-color: #2f855a;
         color: white;
-        animation: correctPulse 0.5s ease;
+        animation: correctPulse 0.6s ease;
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
     }
 
     .answer-btn.incorrect {
-        background: #f56565;
-        border-color: #e53e3e;
+        background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        border-color: #c53030;
         color: white;
         animation: shake 0.5s ease;
+        box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4);
     }
 
     .answer-btn:disabled {
         cursor: not-allowed;
-        opacity: 0.6;
+        opacity: 0.7;
     }
 
     @keyframes correctPulse {
         0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        50% { transform: scale(1.05); box-shadow: 0 12px 35px rgba(72, 187, 120, 0.5); }
     }
 
     @keyframes shake {
@@ -526,7 +568,7 @@ const title = "Klockan Quiz - Practice Swedish Time";
 </style>
 
 <script>
-    import { clockTimes, getRandomTime, getRandomTimesByCategory, generateWrongAnswers, type ClockTime } from '../../data/clock';
+    import { clockTimes, getRandomTime, getRandomTimesByCategory, generateWrongAnswers, getWrittenSwedishTime, type ClockTime } from '../../data/clock';
 
     let currentDifficulty: string = '';
     let currentQuestion: ClockTime | null = null;
@@ -541,6 +583,7 @@ const title = "Klockan Quiz - Practice Swedish Time";
     const resultsContainer = document.getElementById('resultsContainer')!;
     const scoreValue = document.getElementById('scoreValue')!;
     const streakValue = document.getElementById('streakValue')!;
+    const progressValue = document.getElementById('progressValue')!;
     const questionNumber = document.getElementById('questionNumber')!;
     const digitalDisplay = document.getElementById('digitalDisplay')!;
     const answersGrid = document.getElementById('answersGrid')!;
@@ -562,6 +605,10 @@ const title = "Klockan Quiz - Practice Swedish Time";
         
         difficultySelection.classList.add('hidden');
         quizContainer.classList.remove('hidden');
+        
+        // Show total available questions
+        const totalAvailable = getQuestionPool().length;
+        progressValue.textContent = `0/${totalAvailable}`;
         
         loadNextQuestion();
     }
@@ -596,6 +643,7 @@ const title = "Klockan Quiz - Practice Swedish Time";
 
         questionNumber.textContent = `Question ${totalQuestions}`;
         scoreValue.textContent = `${score}/${totalQuestions - 1}`;
+        progressValue.textContent = `${answeredQuestions.size}/${pool.length}`;
         
         updateClockDisplay(currentQuestion.hour, currentQuestion.minute);
         generateAnswers(currentQuestion);

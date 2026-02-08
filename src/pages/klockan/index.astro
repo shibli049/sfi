@@ -80,7 +80,7 @@ const title = "Klockan - Swedish Clock System";
                 <div class="clock-controls">
                     <div class="time-display">
                         <div class="digital-time" id="digitalTime">12:00</div>
-                        <div class="written-time" id="writtenTime">tolv</div>
+                        <div class="written-time" id="writtenTime">klockan tolv</div>
                         <div class="swedish-time" id="swedishTime">klockan tolv</div>
                         <div class="english-time" id="englishTime">twelve o'clock</div>
                         <div class="explanation-text" id="explanationText">Exact hour</div>
@@ -556,17 +556,19 @@ const title = "Klockan - Swedish Clock System";
         hourHand!.setAttribute('x2', hourX.toString());
         hourHand!.setAttribute('y2', hourY.toString());
         
-        // Find matching time expression
+        // Find matching time expression for English and explanation
         const matchingTime = clockTimes.find(t => t.hour === hour && t.minute === minute);
         
+        // Always show Swedish time using the function
+        swedishTime!.textContent = getWrittenSwedishTime(hour, minute);
+        
         if (matchingTime) {
-            swedishTime!.textContent = matchingTime.swedish;
             englishTime!.textContent = matchingTime.english;
             explanationText!.textContent = matchingTime.explanation;
         } else {
-            swedishTime!.textContent = `${hour}:${minute.toString().padStart(2, '0')}`;
-            englishTime!.textContent = 'No common expression';
-            explanationText!.textContent = 'Try common times (0, 5, 10, 15, 20, 30, 40, 45, 50, 55 minutes)';
+            // For times not in the dataset, provide generic info
+            englishTime!.textContent = 'Custom time';
+            explanationText!.textContent = 'Use the sliders to explore Swedish time expressions';
         }
     }
 

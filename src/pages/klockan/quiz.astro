@@ -21,20 +21,15 @@ const title = "Klockan Quiz - Practice Swedish Time";
         <div class="difficulty-selection" id="difficultySelection">
             <h2>Select Difficulty</h2>
             <div class="difficulty-buttons">
-                <button class="difficulty-btn" data-difficulty="exact">
+                <button class="difficulty-btn" data-difficulty="half">
                     <div class="difficulty-icon">🟢</div>
-                    <div class="difficulty-name">Beginner</div>
-                    <div class="difficulty-desc">Exact hours only</div>
+                    <div class="difficulty-name">Easy</div>
+                    <div class="difficulty-desc">Half hours (halv)</div>
                 </button>
                 <button class="difficulty-btn" data-difficulty="quarter">
                     <div class="difficulty-icon">🟡</div>
-                    <div class="difficulty-name">Easy</div>
-                    <div class="difficulty-desc">Quarters (kvart)</div>
-                </button>
-                <button class="difficulty-btn" data-difficulty="half">
-                    <div class="difficulty-icon">🟠</div>
                     <div class="difficulty-name">Medium</div>
-                    <div class="difficulty-desc">Half hours (halv)</div>
+                    <div class="difficulty-desc">Quarters (kvart)</div>
                 </button>
                 <button class="difficulty-btn" data-difficulty="mixed">
                     <div class="difficulty-icon">🔴</div>
@@ -117,7 +112,12 @@ const title = "Klockan Quiz - Practice Swedish Time";
                         <circle cx="150" cy="150" r="8" fill="#2d3748"/>
                     </svg>
                     
-                    <div class="digital-display" id="digitalDisplay">12:00</div>
+                    <div class="hint-container">
+                        <button class="hint-btn" id="hintBtn">
+                            <span class="hint-icon">💡</span> Show Hint
+                        </button>
+                        <div class="digital-display hidden" id="digitalDisplay">12:00</div>
+                    </div>
                 </div>
 
                 <div class="question-text">Hur mycket är klockan?<br><span class="question-subtext">(What time is it?)</span></div>
@@ -235,30 +235,52 @@ const title = "Klockan Quiz - Practice Swedish Time";
 
     .difficulty-btn {
         background: white;
-        border: 3px solid #e2e8f0;
-        border-radius: 15px;
-        padding: 25px 20px;
+        border: 2px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 30px 20px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .difficulty-btn::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--primary-color);
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: 0;
     }
 
     .difficulty-btn:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         border-color: var(--primary-color);
     }
 
+    .difficulty-icon, .difficulty-name, .difficulty-desc {
+        position: relative;
+        z-index: 1;
+    }
+
     .difficulty-icon {
-        font-size: 3em;
-        margin-bottom: 10px;
+        font-size: 3.5em;
+        margin-bottom: 12px;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     }
 
     .difficulty-name {
-        font-size: 1.3em;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 5px;
+        font-size: 1.4em;
+        font-weight: 800;
+        color: #1a202c;
+        margin-bottom: 6px;
     }
 
     .difficulty-desc {
@@ -357,6 +379,38 @@ const title = "Klockan Quiz - Practice Swedish Time";
         font-weight: bold;
         color: var(--primary-color);
         font-family: 'Courier New', monospace;
+        transition: all 0.3s ease;
+    }
+
+    .hint-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 60px;
+        justify-content: center;
+    }
+
+    .hint-btn {
+        background: #fefcbf;
+        border: 2px dashed #ecc94b;
+        color: #744210;
+        padding: 8px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .hint-btn:hover {
+        background: #faf089;
+        transform: scale(1.05);
+    }
+
+    .hint-icon {
+        font-size: 1.2em;
     }
 
     .question-text {
@@ -374,70 +428,78 @@ const title = "Klockan Quiz - Practice Swedish Time";
         font-style: italic;
     }
 
-    .answers-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .answer-btn {
-        background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
-        border: 2px solid #e2e8f0;
-        border-radius: 15px;
-        padding: 25px 20px;
-        font-size: 1.15em;
-        font-weight: 600;
+    :global(.answer-btn) {
+        background: white;
+        border: 2px solid #edf2f7;
+        border-radius: 16px;
+        padding: 24px 20px;
+        font-size: 1.2em;
+        font-weight: 700;
         color: #2d3748;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         position: relative;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 80px;
+        width: 100%;
+        font-family: inherit;
     }
 
-    .answer-btn::before {
+    :global(.answer-btn:hover:not(.correct):not(.incorrect):not(:disabled)) {
+        border-color: #667eea;
+        background: #f8faff;
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 20px rgba(102, 126, 234, 0.15);
+        color: #4c51bf;
+    }
+
+    :global(.answer-btn::before) {
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
-        width: 100%;
+        left: 0;
+        width: 4px;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-        transition: left 0.5s;
+        background: #667eea;
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
     }
 
-    .answer-btn:hover:not(.correct):not(.incorrect):not(:disabled)::before {
-        left: 100%;
+    :global(.answer-btn:hover:not(.correct):not(.incorrect):not(:disabled)::before) {
+        transform: scaleY(1);
     }
 
-    .answer-btn:hover:not(.correct):not(.incorrect):not(:disabled) {
-        border-color: var(--primary-color);
-        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-    }
-
-    .answer-btn.correct {
-        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-        border-color: #2f855a;
-        color: white;
+    :global(.answer-btn.correct) {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;
+        border-color: #2f855a !important;
+        color: white !important;
         animation: correctPulse 0.6s ease;
-        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4) !important;
     }
 
-    .answer-btn.incorrect {
-        background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-        border-color: #c53030;
-        color: white;
+    :global(.answer-btn.incorrect) {
+        background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;
+        border-color: #c53030 !important;
+        color: white !important;
         animation: shake 0.5s ease;
-        box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4);
+        box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4) !important;
     }
 
-    .answer-btn:disabled {
+    :global(.answer-btn:disabled) {
         cursor: not-allowed;
-        opacity: 0.7;
+        opacity: 0.8;
+    }
+
+    .answers-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
     }
 
     @keyframes correctPulse {
@@ -479,30 +541,45 @@ const title = "Klockan Quiz - Practice Swedish Time";
     }
 
     .action-btn {
-        padding: 15px 35px;
+        padding: 16px 32px;
         border: none;
-        border-radius: 12px;
+        border-radius: 14px;
         font-size: 1.1em;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         text-decoration: none;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .action-btn.primary {
-        background: var(--primary-color);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
     }
 
     .action-btn.secondary {
-        background: #e2e8f0;
+        background: #ffffff;
         color: #2d3748;
+        border: 2px solid #e2e8f0;
     }
 
     .action-btn:hover {
         transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-btn.primary:hover {
+        filter: brightness(1.1);
+    }
+
+    .action-btn.secondary:hover {
+        background: #f7fafc;
+        border-color: #cbd5e0;
     }
 
     .results-container {
@@ -571,7 +648,8 @@ const title = "Klockan Quiz - Practice Swedish Time";
     import { clockTimes, getRandomTime, getRandomTimesByCategory, generateWrongAnswers, getWrittenSwedishTime, type ClockTime } from '../../data/clock';
 
     let currentDifficulty: string = '';
-    let currentQuestion: ClockTime | null = null;
+    let quizSequence: ClockTime[] = [];
+    let currentQuestionIndex = 0;
     let score = 0;
     let totalQuestions = 0;
     let currentStreak = 0;
@@ -592,23 +670,70 @@ const title = "Klockan Quiz - Practice Swedish Time";
     const skipBtn = document.getElementById('skipBtn')!;
     const quitBtn = document.getElementById('quitBtn')!;
     const restartBtn = document.getElementById('restartBtn')!;
+    const hintBtn = document.getElementById('hintBtn')!;
     const quizHourHand = document.getElementById('quizHourHand')!;
     const quizMinuteHand = document.getElementById('quizMinuteHand')!;
+
+    const MAX_QUESTIONS = 20;
+
+    function getSubCategory(time: ClockTime): string {
+        const { minute } = time;
+        if (minute === 0) return 'exact';
+        if (minute === 15) return 'kvart-över';
+        if (minute === 45) return 'kvart-i';
+        if (minute === 30) return 'halv';
+        if (minute === 25) return 'fem-i-halv';
+        if (minute === 35) return 'fem-över-halv';
+        if (minute < 30) return 'över';
+        return 'i';
+    }
 
     function startQuiz(difficulty: string) {
         currentDifficulty = difficulty;
         score = 0;
+        currentQuestionIndex = 0;
         totalQuestions = 0;
         currentStreak = 0;
         bestStreak = 0;
         answeredQuestions.clear();
         
+        const pool = getQuestionPool();
+        
+        if (difficulty === 'mixed') {
+            // Hard mode: Ensure diversity
+            const categories = new Map<string, ClockTime[]>();
+            pool.forEach(q => {
+                const cat = getSubCategory(q);
+                if (!categories.has(cat)) categories.set(cat, []);
+                categories.get(cat)!.push(q);
+            });
+
+            const sequence: ClockTime[] = [];
+            // Pick 1 from each category first
+            categories.forEach(objs => {
+                const randomIdx = Math.floor(Math.random() * objs.length);
+                sequence.push(objs[randomIdx]);
+            });
+
+            // Fill the rest randomly
+            const remaining = pool.filter(q => !sequence.includes(q));
+            const shuffledRemaining = [...remaining].sort(() => Math.random() - 0.5);
+            
+            while (sequence.length < MAX_QUESTIONS && shuffledRemaining.length > 0) {
+                sequence.push(shuffledRemaining.pop()!);
+            }
+            
+            quizSequence = sequence.sort(() => Math.random() - 0.5);
+        } else {
+            // Other modes: Just random selection from pool
+            quizSequence = [...pool].sort(() => Math.random() - 0.5).slice(0, MAX_QUESTIONS);
+        }
+        
         difficultySelection.classList.add('hidden');
         quizContainer.classList.remove('hidden');
         
-        // Show total available questions
-        const totalAvailable = getQuestionPool().length;
-        progressValue.textContent = `0/${totalAvailable}`;
+        // Show total available questions (max 20)
+        progressValue.textContent = `0/${quizSequence.length}`;
         
         loadNextQuestion();
     }
@@ -628,22 +753,18 @@ const title = "Klockan Quiz - Practice Swedish Time";
     }
 
     function loadNextQuestion() {
-        const pool = getQuestionPool();
-        const availableQuestions = pool.filter(t => 
-            !answeredQuestions.has(`${t.hour}:${t.minute}`)
-        );
-
-        if (availableQuestions.length === 0) {
+        if (currentQuestionIndex >= quizSequence.length) {
             showResults();
             return;
         }
 
-        currentQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+        const currentQuestion = quizSequence[currentQuestionIndex];
         totalQuestions++;
 
-        questionNumber.textContent = `Question ${totalQuestions}`;
+        const totalToPlay = quizSequence.length;
+        questionNumber.textContent = `Question ${totalQuestions} of ${totalToPlay}`;
         scoreValue.textContent = `${score}/${totalQuestions - 1}`;
-        progressValue.textContent = `${answeredQuestions.size}/${pool.length}`;
+        progressValue.textContent = `${totalQuestions - 1}/${totalToPlay}`;
         
         updateClockDisplay(currentQuestion.hour, currentQuestion.minute);
         generateAnswers(currentQuestion);
@@ -651,6 +772,12 @@ const title = "Klockan Quiz - Practice Swedish Time";
         feedback.classList.add('hidden');
         nextBtn.classList.add('hidden');
         skipBtn.classList.remove('hidden');
+        
+        // Reset hint state
+        digitalDisplay.classList.add('hidden');
+        hintBtn.classList.remove('hidden');
+        
+        currentQuestionIndex++;
     }
 
     function updateClockDisplay(hour: number, minute: number) {
@@ -718,9 +845,14 @@ const title = "Klockan Quiz - Practice Swedish Time";
         scoreValue.textContent = `${score}/${totalQuestions}`;
         streakValue.textContent = currentStreak.toString();
         
-        if (currentQuestion) {
-            answeredQuestions.add(`${currentQuestion.hour}:${currentQuestion.minute}`);
+        if (currentQuestionIndex > 0) {
+            const currentQ = quizSequence[currentQuestionIndex - 1];
+            answeredQuestions.add(`${currentQ.hour}:${currentQ.minute}`);
         }
+
+        // Always reveal the digital time after an answer is given
+        digitalDisplay.classList.remove('hidden');
+        hintBtn.classList.add('hidden');
 
         skipBtn.classList.add('hidden');
         nextBtn.classList.remove('hidden');
@@ -762,8 +894,9 @@ const title = "Klockan Quiz - Practice Swedish Time";
 
     nextBtn.addEventListener('click', loadNextQuestion);
     skipBtn.addEventListener('click', () => {
-        if (currentQuestion) {
-            answeredQuestions.add(`${currentQuestion.hour}:${currentQuestion.minute}`);
+        if (currentQuestionIndex > 0) {
+            const currentQ = quizSequence[currentQuestionIndex - 1];
+            answeredQuestions.add(`${currentQ.hour}:${currentQ.minute}`);
         }
         currentStreak = 0;
         streakValue.textContent = '0';
@@ -771,6 +904,10 @@ const title = "Klockan Quiz - Practice Swedish Time";
     });
     quitBtn.addEventListener('click', showResults);
     restartBtn.addEventListener('click', resetQuiz);
+    hintBtn.addEventListener('click', () => {
+        digitalDisplay.classList.remove('hidden');
+        hintBtn.classList.add('hidden');
+    });
 </script>
 
 </Layout>

@@ -3,6 +3,12 @@ const currentYear = new Date().getFullYear();
 ---
 <footer>
     <p>&copy; {currentYear} Svenska Project. Open Source Learning.</p>
+    <p class="star-request">
+        Enjoying these exercises? Support the project by 
+        <a href="https://github.com/shibli049/sfi" target="_blank" rel="noopener noreferrer">
+            giving it a star on GitHub &starf;
+        </a>
+    </p>
     <p class="maintainer">
         Maintained by 
         <a href="https://github.com/shibli049" target="_blank" rel="noopener noreferrer">
@@ -18,17 +24,39 @@ const currentYear = new Date().getFullYear();
     footer {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.75rem;
         align-items: center;
-        padding: 2rem;
+        padding: 3rem 2rem;
         color: var(--text-secondary);
         font-size: 0.875rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        margin-top: 4rem;
+    }
+    .star-request {
+        font-weight: 500;
+        color: var(--text-primary);
+        background-color: #f8fafc;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+    }
+    .star-request a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .star-request:hover {
+        background-color: #f1f5f9;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     .maintainer {
         display: flex;
         align-items: center;
         gap: 0.25rem;
-        opacity: 0.9;
+        opacity: 0.8;
+        margin-top: 0.25rem;
     }
     .maintainer a {
         display: inline-flex;

@@ -6,32 +6,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Parts Alignment Tool</title>
     <style>
+        :root {
+            --primary-color: #667eea;
+            --en-color: #4fd1c5;
+            --en-text: #319795;
+            --ett-color: #f687b3;
+            --ett-text: #d53f8c;
+            --bg-color: #f8fafc;
+        }
+
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             padding: 20px;
             gap: 20px;
+            background-color: #e2e8f0;
+            margin: 0;
+            height: 100vh;
+            box-sizing: border-box;
         }
 
         .controls {
-            width: 300px;
+            width: 350px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
         }
 
         .canvas-container {
             position: relative;
-            border: 1px solid #ccc;
-            width: 1024px;
-            height: 1024px;
-            /* Target size */
-            background-color: #f0f0f0;
-            overflow: hidden;
+            border-radius: 10px;
+            width: 800px;
+            /* Visual size, but we use 1024 as internal coord system */
+            height: 800px;
+            background-color: var(--bg-color);
+            /* Remove overflow: hidden to prevent label clipping */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            cursor: crosshair;
+            z-index: 1;
         }
 
-        .canvas-container img.target {
+        /* Essential for matching the app: The image wrapper behavior */
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .image-wrapper img.target {
             width: 100%;
             height: 100%;
             position: absolute;
@@ -39,9 +67,10 @@
             left: 0;
             object-fit: contain;
             user-select: none;
+            z-index: 1;
         }
 
-        .canvas-container img.reference {
+        .image-wrapper img.reference {
             position: absolute;
             top: 0;
             left: 0;
@@ -50,129 +79,225 @@
             width: 100%;
             height: 100%;
             display: none;
+            object-fit: contain;
+            z-index: 2;
         }
 
-        .hotspot {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: rgba(102, 126, 234, 0.8);
-            border: 2px solid white;
-            border-radius: 50%;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: grab;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-        }
-
-        .hotspot:active {
-            cursor: grabbing;
-            background: #4a5bb9;
-        }
-
-        .hotspot.selected {
-            border-color: #fbbf24;
-            background: #4a5bb9;
-            z-index: 100;
-            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.5);
-        }
-
-        .anchor {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: red;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            cursor: grab;
-            z-index: 5;
-            border: 2px solid white;
-        }
-
-        svg {
+        #linesSvg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
+            z-index: 5;
+        }
+
+        .hotspot {
+            position: absolute;
+            width: 3.5%;
+            height: 3.5%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: grab;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .hotspot.en {
+            border-color: var(--en-color);
+            color: var(--en-text);
+        }
+
+        .hotspot.ett {
+            border-color: var(--ett-color);
+            color: var(--ett-text);
+        }
+
+        .hotspot:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 200;
+        }
+
+        .hotspot.selected {
+            z-index: 100;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.4);
+            background: white;
+            border-width: 3px;
+        }
+
+        .hotspot .label {
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d3748;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            /* Hide by default */
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.2s;
+        }
+
+        .hotspot.selected .label {
+            opacity: 1;
+            /* Show when selected */
+        }
+
+        .anchor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            z-index: 8;
+        }
+
+        .anchor.selected {
+            background: #fbbf24;
+            width: 16px;
+            height: 16px;
         }
 
         textarea {
             width: 100%;
-            height: 300px;
+            height: 200px;
             font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background: #f1f5f9;
         }
 
         button {
-            padding: 10px;
+            padding: 10px 15px;
             cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #4f46e5;
+        }
+
+        button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
         }
 
         .control-panel {
             padding: 15px;
-            background: #f8f9fa;
+            background: #f8fafc;
             border-radius: 8px;
-            border: 1px solid #dee2e6;
-            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
         }
 
         .control-panel h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 16px;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            font-size: 13px;
+            line-height: 1.4;
+            color: #475569;
         }
     </style>
 </head>
 
 <body>
     <div class="controls">
-        <h2>Alignment Tool</h2>
-        <p>1. <b>Blue Dots</b>: Hotspots (Numbers)</p>
-        <p>2. <b>Red Dots</b>: Line Anchors (Body)</p>
-        <p>3. Click a blue dot to select it.</p>
+        <h2 style="margin-top: 0;">Alignment Tool</h2>
 
-        <div class="control-panel">
-            <h3>Current Selection</h3>
-            <div id="selectionInfo" style="margin-bottom: 10px; color: #666;">None</div>
-            <button id="btnAddAnchor" disabled>Add Anchor Line</button>
-            <button id="btnRemoveAnchor" disabled>Remove Last Anchor</button>
+        <div class="info-box">
+            <p>• <b>Hotspots</b>: Numbers (Move to text positions)</p>
+            <p>• <b>Anchors</b>: Red dots (Move to body parts)</p>
+            <p>• Select a hotspot to manage its anchors.</p>
         </div>
 
-        <label>
-            <input type="checkbox" id="showRef"> Show Reference Image
-        </label>
-        <label>
-            Ref Opacity: <input type="range" id="refOpacity" min="0" max="1" step="0.1" value="0.5">
-        </label>
+        <div class="control-panel">
+            <h3>Selection</h3>
+            <div id="selectionInfo" style="margin-bottom: 12px; font-weight: 600;">None selected</div>
+            <div class="btn-group">
+                <button id="btnAddAnchor" disabled>+ Anchor</button>
+                <button id="btnRemoveAnchor" disabled>- Last</button>
+            </div>
+        </div>
 
-        <button onclick="guessScale()">Apply Auto-Scale Guess</button>
-        <button onclick="generateJSON()">Generate JSON</button>
-        <textarea id="output" readonly onclick="this.select()"></textarea>
+        <div class="control-panel">
+            <h3>View</h3>
+            <label style="display: block; margin-bottom: 8px; cursor: pointer;">
+                <input type="checkbox" id="showRef"> Show Reference Image
+            </label>
+            <label style="display: block; font-size: 12px;">
+                Ref Opacity: <input type="range" id="refOpacity" min="0" max="1" step="0.1" value="0.5"
+                    style="width: 100%;">
+            </label>
+        </div>
+
+        <div class="control-panel">
+            <h3>Actions</h3>
+            <div class="btn-group">
+                <button onclick="copyToClipboard()">Copy JSON</button>
+                <button onclick="generateJSON()" style="background: #10b981;">Preview JSON</button>
+            </div>
+        </div>
+
+        <textarea id="output" readonly placeholder="JSON will appear here..."></textarea>
     </div>
 
     <div class="canvas-container" id="container">
-        <img src="kroppens-delar-svensk-2.png" class="target" id="targetImg">
-        <img src="kroppens-delar-svensk-numbered.png" class="reference" id="refImg">
-        <svg id="linesSvg"></svg>
-        <div id="overlay"></div>
+        <div class="image-wrapper">
+            <img src="../public/kroppens-delar-svensk-2.png" class="target" id="targetImg">
+            <img src="kroppens-delar-svensk-numbered.png" class="reference" id="refImg">
+            <svg id="linesSvg" viewBox="0 0 1024 1024" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="overlay" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
+        </div>
     </div>
 
     <!-- Load external data -->
     <script src="body_parts_data.js"></script>
 
     <script>
-        // Start Data
         // Use external data
         let bodyParts = typeof bodyPartsData !== 'undefined' ? bodyPartsData : [];
 
         const overlay = document.getElementById('overlay');
         const linesSvg = document.getElementById('linesSvg');
+        const container = document.getElementById('container');
 
         // UI Elements
         const showRef = document.getElementById('showRef');
@@ -197,8 +322,9 @@
         btnAddAnchor.addEventListener('click', () => {
             if (selectedIndex === -1) return;
             const part = bodyParts[selectedIndex];
-            // Add a new anchor slighly offset from the hotspot
-            part.anchors.push({ x: part.x + 40, y: part.y + 40 });
+            if (!part.anchors) part.anchors = [];
+            // Add a new anchor slightly offset from the hotspot but clamped/reasonable
+            part.anchors.push({ x: Math.min(1000, part.x + 50), y: Math.min(1000, part.y + 50) });
             render();
             updateSelection();
         });
@@ -206,7 +332,7 @@
         btnRemoveAnchor.addEventListener('click', () => {
             if (selectedIndex === -1) return;
             const part = bodyParts[selectedIndex];
-            if (part.anchors.length > 0) {
+            if (part.anchors && part.anchors.length > 0) {
                 part.anchors.pop();
                 render();
                 updateSelection();
@@ -221,23 +347,25 @@
 
             bodyParts.forEach((part, index) => {
                 const isSelected = index === selectedIndex;
+                const category = part.word.toLowerCase().startsWith('ett ') ? 'ett' : (part.word.toLowerCase().startsWith('en ') ? 'en' : '');
 
                 // Draw Lines & Anchors
-                part.anchors.forEach(anchor => {
+                const anchors = part.anchors || [];
+                anchors.forEach((anchor, aIndex) => {
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('x1', anchor.x);
                     line.setAttribute('y1', anchor.y);
                     line.setAttribute('x2', part.x);
                     line.setAttribute('y2', part.y);
-                    line.setAttribute('stroke', isSelected ? '#667eea' : '#000');
-                    line.setAttribute('stroke-width', isSelected ? '3' : '2');
+                    line.setAttribute('stroke', isSelected ? '#667eea' : '#2d3748');
+                    line.setAttribute('stroke-width', isSelected ? '4' : '2');
+                    line.setAttribute('opacity', isSelected ? '1' : '0.6');
                     linesSvg.appendChild(line);
 
                     const anchorEl = document.createElement('div');
-                    anchorEl.className = 'anchor';
-                    anchorEl.style.left = anchor.x + 'px';
-                    anchorEl.style.top = anchor.y + 'px';
-                    if (isSelected) anchorEl.style.background = '#fbbf24';
+                    anchorEl.className = `anchor ${isSelected ? 'selected' : ''}`;
+                    anchorEl.style.left = (anchor.x / 1024 * 100) + '%';
+                    anchorEl.style.top = (anchor.y / 1024 * 100) + '%';
 
                     makeDraggable(anchorEl, anchor, 'x', 'y');
                     overlay.appendChild(anchorEl);
@@ -245,17 +373,19 @@
 
                 // Draw Hotspot
                 const hotspot = document.createElement('div');
-                hotspot.className = `hotspot ${isSelected ? 'selected' : ''}`;
-                hotspot.textContent = part.num;
-                hotspot.style.left = part.x + 'px';
-                hotspot.style.top = part.y + 'px';
-                hotspot.title = part.word;
+                hotspot.className = `hotspot ${category} ${isSelected ? 'selected' : ''}`;
+
+                // Only create the label element if selected or always create but hide via CSS
+                hotspot.innerHTML = `${part.num}<div class="label">${part.word}</div>`;
+
+                hotspot.style.left = (part.x / 1024 * 100) + '%';
+                hotspot.style.top = (part.y / 1024 * 100) + '%';
 
                 hotspot.addEventListener('mousedown', (e) => {
-                    if (e.target === hotspot) { // Avoid triggering when dragging child? No child here.
+                    if (selectedIndex !== index) {
                         selectedIndex = index;
                         updateSelection();
-                        render(); // Re-render to show selection state
+                        render();
                     }
                 });
 
@@ -266,46 +396,53 @@
 
         function updateSelection() {
             if (selectedIndex === -1) {
-                selectionInfo.textContent = "None";
+                selectionInfo.textContent = "None selected";
                 btnAddAnchor.disabled = true;
                 btnRemoveAnchor.disabled = true;
                 return;
             }
 
             const part = bodyParts[selectedIndex];
-            selectionInfo.innerHTML = `<strong>#${part.num} ${part.word}</strong><br>Anchors: ${part.anchors.length}`;
+            selectionInfo.innerHTML = `<span style="color: var(--primary-color)">#${part.num} ${part.word}</span>`;
             btnAddAnchor.disabled = false;
-            btnRemoveAnchor.disabled = part.anchors.length === 0;
+            btnRemoveAnchor.disabled = !part.anchors || part.anchors.length === 0;
         }
 
         function makeDraggable(el, dataObj, xProp, yProp) {
             el.addEventListener('mousedown', (e) => {
-                // If it's a hotspot, we already handled selection in the specific listener, 
-                // but we need to stop propagation if we don't want to deselect or something.
-                // Actually, let's just handle dragging here.
-
+                e.stopPropagation();
                 const startX = e.clientX;
                 const startY = e.clientY;
                 const startObjX = dataObj[xProp];
                 const startObjY = dataObj[yProp];
 
+                // Calculate scale factor: 1024 internal units / current pixel width
+                const rect = container.getBoundingClientRect();
+                const scale = 1024 / rect.width;
+
                 function onMouseMove(e) {
-                    const dx = e.clientX - startX;
-                    const dy = e.clientY - startY;
+                    const dx = (e.clientX - startX) * scale;
+                    const dy = (e.clientY - startY) * scale;
 
                     dataObj[xProp] = Math.round(startObjX + dx);
                     dataObj[yProp] = Math.round(startObjY + dy);
 
-                    el.style.left = dataObj[xProp] + 'px';
-                    el.style.top = dataObj[yProp] + 'px';
+                    // Optional: Clamp to 0-1024
+                    dataObj[xProp] = Math.max(0, Math.min(1024, dataObj[xProp]));
+                    dataObj[yProp] = Math.max(0, Math.min(1024, dataObj[yProp]));
 
-                    // Perf: requestAnimationFrame would be better, but direct render is fine for this scale
-                    render();
+                    // Update element position immediately for smoothness
+                    el.style.left = (dataObj[xProp] / 1024 * 100) + '%';
+                    el.style.top = (dataObj[yProp] / 1024 * 100) + '%';
+
+                    // Update lines in real-time
+                    updateLines();
                 }
 
                 function onMouseUp() {
                     document.removeEventListener('mousemove', onMouseMove);
                     document.removeEventListener('mouseup', onMouseUp);
+                    render(); // Final render to sync everything
                 }
 
                 document.addEventListener('mousemove', onMouseMove);
@@ -313,18 +450,25 @@
             });
         }
 
-        function guessScale() {
-            const scaleX = 1024 / 683;
-
-            bodyParts.forEach(part => {
-                part.x = Math.round(part.x * scaleX);
-                part.y = Math.round(part.y * scaleX);
-                part.anchors.forEach(anch => {
-                    anch.x = Math.round(anch.x * scaleX);
-                    anch.y = Math.round(anch.y * scaleX);
+        function updateLines() {
+            // Find just the lines for the currently dragging object? 
+            // Simpler to just redraw all lines in the SVG without clearing overlay
+            linesSvg.innerHTML = '';
+            bodyParts.forEach((part, index) => {
+                const isSelected = index === selectedIndex;
+                const anchors = part.anchors || [];
+                anchors.forEach(anchor => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', anchor.x);
+                    line.setAttribute('y1', anchor.y);
+                    line.setAttribute('x2', part.x);
+                    line.setAttribute('y2', part.y);
+                    line.setAttribute('stroke', isSelected ? '#667eea' : '#2d3748');
+                    line.setAttribute('stroke-width', isSelected ? '4' : '2');
+                    line.setAttribute('opacity', isSelected ? '1' : '0.6');
+                    linesSvg.appendChild(line);
                 });
             });
-            render();
         }
 
         function generateJSON() {
@@ -332,6 +476,14 @@
             const output = document.getElementById('output');
             output.value = json;
             output.select();
+        }
+
+        function copyToClipboard() {
+            generateJSON();
+            const output = document.getElementById('output');
+            output.select();
+            document.execCommand('copy');
+            alert('JSON copied to clipboard!');
         }
 
         // Init

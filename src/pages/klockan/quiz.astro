@@ -125,10 +125,6 @@ const title = "Klockan Quiz - Practice Swedish Time";
                 <div class="answers-grid" id="answersGrid">
                     <!-- Answers will be inserted here -->
                 </div>
-
-                <div class="feedback hidden" id="feedback">
-                    <div class="feedback-content"></div>
-                </div>
             </div>
 
             <div class="quiz-actions">
@@ -531,26 +527,7 @@ const title = "Klockan Quiz - Practice Swedish Time";
         75% { transform: translateX(10px); }
     }
 
-    .feedback {
-        margin-top: 20px;
-        padding: 20px;
-        border-radius: 12px;
-        text-align: center;
-        font-size: 1.1em;
-        font-weight: 600;
-    }
 
-    .feedback.correct {
-        background: #c6f6d5;
-        color: #22543d;
-        border: 2px solid #48bb78;
-    }
-
-    .feedback.incorrect {
-        background: #fed7d7;
-        color: #742a2a;
-        border: 2px solid #f56565;
-    }
 
     .quiz-actions {
         display: flex;
@@ -755,7 +732,6 @@ const title = "Klockan Quiz - Practice Swedish Time";
     const questionNumber = document.getElementById('questionNumber')!;
     const digitalDisplay = document.getElementById('digitalDisplay')!;
     const answersGrid = document.getElementById('answersGrid')!;
-    const feedback = document.getElementById('feedback')!;
     const nextBtn = document.getElementById('nextBtn')!;
     const skipBtn = document.getElementById('skipBtn')!;
     const quitBtn = document.getElementById('quitBtn')!;
@@ -864,7 +840,6 @@ const title = "Klockan Quiz - Practice Swedish Time";
         updateClockDisplay(currentQuestion.hour, currentQuestion.minute);
         generateAnswers(currentQuestion);
         
-        feedback.classList.add('hidden');
         nextBtn.classList.add('hidden');
         skipBtn.classList.remove('hidden');
         
@@ -909,6 +884,8 @@ const title = "Klockan Quiz - Practice Swedish Time";
         });
     }
 
+
+
     function checkAnswer(selected: string, correct: string) {
         const isCorrect = selected === correct;
         const buttons = answersGrid.querySelectorAll('.answer-btn');
@@ -926,22 +903,15 @@ const title = "Klockan Quiz - Practice Swedish Time";
             score++;
             currentStreak++;
             bestStreak = Math.max(bestStreak, currentStreak);
-            feedback.className = 'feedback correct';
-            feedback.querySelector('.feedback-content')!.textContent = '✅ Correct! Well done!';
             speak(correct);
             
             // Auto-advance to next question after delay
             autoNextTimeout = setTimeout(() => {
                 loadNextQuestion();
-            }, 1000);
+            }, 1500);
         } else {
             currentStreak = 0;
-            feedback.className = 'feedback incorrect';
-            feedback.querySelector('.feedback-content')!.innerHTML = 
-                `❌ Incorrect. The correct answer is: <strong>${correct}</strong>`;
         }
-
-        feedback.classList.remove('hidden');
         scoreValue.textContent = `${score}/${totalQuestions}`;
         streakValue.textContent = currentStreak.toString();
         

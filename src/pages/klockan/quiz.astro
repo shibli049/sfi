@@ -655,6 +655,7 @@ const title = "Klockan Quiz - Practice Swedish Time";
     let currentStreak = 0;
     let bestStreak = 0;
     let answeredQuestions = new Set<string>();
+    let autoNextTimeout: any = null;
 
     const difficultySelection = document.getElementById('difficultySelection')!;
     const quizContainer = document.getElementById('quizContainer')!;
@@ -753,6 +754,11 @@ const title = "Klockan Quiz - Practice Swedish Time";
     }
 
     function loadNextQuestion() {
+        if (autoNextTimeout) {
+            clearTimeout(autoNextTimeout);
+            autoNextTimeout = null;
+        }
+
         if (currentQuestionIndex >= quizSequence.length) {
             showResults();
             return;
@@ -834,6 +840,11 @@ const title = "Klockan Quiz - Practice Swedish Time";
             feedback.className = 'feedback correct';
             feedback.querySelector('.feedback-content')!.textContent = '✅ Correct! Well done!';
             speak(correct);
+            
+            // Auto-advance to next question after delay
+            autoNextTimeout = setTimeout(() => {
+                loadNextQuestion();
+            }, 1800);
         } else {
             currentStreak = 0;
             feedback.className = 'feedback incorrect';
